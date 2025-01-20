@@ -173,3 +173,5 @@ cython_debug/
 test-gadget.py
 
 .test-gadget
+
+.vscode/

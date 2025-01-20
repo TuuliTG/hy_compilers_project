@@ -8,6 +8,7 @@ class TokenType(Enum):
     OPERATOR = "operator"
     IDENTIFIER = "identifier"
     PUNCTUATION = "punctuation"
+    END = "end"
 
 
 @dataclass
