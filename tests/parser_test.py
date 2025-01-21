@@ -88,13 +88,13 @@ def test_parse_multiple_operations_2() -> None:
 
 
 def test_empty_tokens_fails_gracefully() -> None:
-    tokens = []
+    tokens: list[Token] = []
     with pytest.raises(IndexError) as e:
         parse(tokens)
     assert "Array of tokens was empty" in str(e.value)
 
 
-def test_invalid_input() -> None:
+def test_calculation_ends_with_plus_sign_throws_an_error() -> None:
     tokens = [
         Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
         Token(loc=L, type=TokenType.OPERATOR, text="+"),
@@ -105,10 +105,11 @@ def test_invalid_input() -> None:
     ]
     with pytest.raises(Exception) as e:
         parse(tokens)
-    assert "expected an integer literal or an identifier" in str(e.value)
+    assert "an integer literal or an identifier" in str(
+        e.value)
 
 
-def test_invalid_input_2() -> None:
+def test_calculation_starts_with_plus_sign_throws_an_error() -> None:
     tokens = [
         Token(loc=L, type=TokenType.OPERATOR, text="+"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
@@ -119,7 +120,7 @@ def test_invalid_input_2() -> None:
     ]
     with pytest.raises(Exception) as e:
         parse(tokens)
-    assert "expected an integer literal or an identifier" in str(e.value)
+    assert "an integer literal or an identifier" in str(e.value)
 
 
 def test_sum_and_multiplication() -> None:
@@ -214,6 +215,58 @@ def test_division_sum_and_multiplication() -> None:
                 left=Literal(value=2), op='/', right=Literal(value=3)), op='*', right=Literal(value=4)
         )
     )
+
+
+def test_parentheses_sum_and_multiplication() -> None:
+    tokens = [
+        Token(loc=L, type=TokenType.IDENTIFIER, text="("),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
+        Token(loc=L, type=TokenType.OPERATOR, text="+"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="2"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text=")"),
+        Token(loc=L, type=TokenType.OPERATOR, text="/"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
+    ]
+    ast = parse(tokens)
+    assert ast == BinaryOp(left=BinaryOp(
+        left=Literal(value=1), op='+', right=Literal(2)), op='/', right=Literal(value=3)
+    )
+
+
+def test_double_parentheses_sum_and_multiplication() -> None:
+    tokens = [
+        Token(loc=L, type=TokenType.IDENTIFIER, text="("),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
+        Token(loc=L, type=TokenType.OPERATOR, text="+"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="("),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="2"),
+        Token(loc=L, type=TokenType.OPERATOR, text="-"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text=")"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text=")"),
+        Token(loc=L, type=TokenType.OPERATOR, text="/"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="4"),
+    ]
+    ast = parse(tokens)
+    assert ast == BinaryOp(
+        left=BinaryOp(
+            left=Literal(value=1), op='+', right=BinaryOp(
+                left=Literal(value=2), op='-', right=Literal(value=3))), op='/', right=Literal(value=4)
+    )
+
+
+def test_missing_parentheses_throws_an_error() -> None:
+    tokens = [
+        Token(loc=L, type=TokenType.IDENTIFIER, text="("),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
+        Token(loc=L, type=TokenType.OPERATOR, text="+"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="2"),
+        Token(loc=L, type=TokenType.OPERATOR, text="/"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
+    ]
+    with pytest.raises(Exception) as e:
+        parse(tokens)
+    assert "expected \")\"" in str(e.value)
 
 
 def test_parse_if_expression() -> None:

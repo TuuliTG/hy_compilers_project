@@ -13,7 +13,7 @@ Otherwise, raise an error.
 def parse(tokens: list[Token]) -> ast.Expression:
     pos = 0
 
-    def peek() -> Token | None:
+    def peek() -> Token:
         if tokens:
             if pos < len(tokens):
                 return tokens[pos]
@@ -65,13 +65,21 @@ def parse(tokens: list[Token]) -> ast.Expression:
         return left
 
     def parse_factor() -> ast.Expression:
-        if peek().type == TokenType.INT_LITERAL:
+        if peek().text == '(':
+            return parse_parenthesized()
+        elif peek().type == TokenType.INT_LITERAL:
             return parse_int_literal()
         elif peek().type == TokenType.IDENTIFIER:
             return parse_identifier()
         else:
             raise Exception(
-                f'{peek().loc}: expected an integer literal or an identifier')
+                f'{peek().loc}: expected "(", an integer literal or an identifier')
+
+    def parse_parenthesized() -> ast.Expression:
+        consume('(')
+        expr = parse_expression()
+        consume(')')
+        return expr
 
     def parse_expression() -> ast.Expression:
         left = parse_term()
