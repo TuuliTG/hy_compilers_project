@@ -48,8 +48,9 @@ def parse(tokens: list[Token]) -> ast.Expression:
     def parse_identifier() -> ast.Identifier:
         if peek().type != TokenType.IDENTIFIER:
             raise Exception(f'{peek().loc}: expected an identifier')
-        token = consume()
-        return ast.Identifier((token.text))
+        else:
+            token = consume()
+            return ast.Identifier((token.text))
 
     def parse_term() -> ast.Expression:
         left = parse_factor()
@@ -67,6 +68,8 @@ def parse(tokens: list[Token]) -> ast.Expression:
     def parse_factor() -> ast.Expression:
         if peek().text == '(':
             return parse_parenthesized()
+        elif peek().text == "if":
+            return parse_if_expression()
         elif peek().type == TokenType.INT_LITERAL:
             return parse_int_literal()
         elif peek().type == TokenType.IDENTIFIER:
@@ -81,7 +84,22 @@ def parse(tokens: list[Token]) -> ast.Expression:
         consume(')')
         return expr
 
+    def parse_if_expression() -> ast.Expression:
+        if_token = consume('if')
+        if_token_text = if_token.text
+        condition_branch = parse_expression()
+        consume('then')
+        then_branch = parse_expression()
+
+        if (peek().text == 'else'):
+            consume('else')
+            else_branch = parse_expression()
+            return ast.IfExpression(condition_branch, operator=if_token_text, then_branch=then_branch, else_branch=else_branch)
+        return ast.IfExpression(condition_branch, operator=if_token_text, then_branch=then_branch, else_branch=None)
+
     def parse_expression() -> ast.Expression:
+        if (peek().text == 'if'):
+            return parse_if_expression()
         left = parse_term()
         while peek().text in ['+', '-']:
             operator_token = consume()

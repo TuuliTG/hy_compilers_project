@@ -1,5 +1,5 @@
 from compiler.domain import Token, SourceLocation, L, TokenType
-from compiler.ast import BinaryOp, Expression, Literal, Identifier
+from compiler.ast import BinaryOp, Expression, IfExpression, Literal, Identifier
 from compiler.parser import parse
 import pytest
 
@@ -273,12 +273,43 @@ def test_parse_if_expression() -> None:
     tokens = [
         Token(loc=L, type=TokenType.IDENTIFIER, text="if"),
         Token(loc=L, type=TokenType.IDENTIFIER, text="a"),
-        Token(loc=L, type=TokenType.OPERATOR, text="="),
+        Token(loc=L, type=TokenType.OPERATOR, text="+"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
         Token(loc=L, type=TokenType.IDENTIFIER, text="then"),
         Token(loc=L, type=TokenType.IDENTIFIER, text="b"),
-        Token(loc=L, type=TokenType.OPERATOR, text="="),
+        Token(loc=L, type=TokenType.OPERATOR, text="*"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="2")
     ]
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=Identifier(name='a'), op='+', right=Literal(value=1)),
+        operator='if', then_branch=BinaryOp(
+            left=Identifier(name='b'), op='*', right=Literal(value=2)), else_branch=None
+    )
 
-    assert True
+
+def test_parse_if_expression_with_else_branch() -> None:
+    tokens = [
+        Token(loc=L, type=TokenType.IDENTIFIER, text="if"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="a"),
+        Token(loc=L, type=TokenType.OPERATOR, text="+"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="then"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="b"),
+        Token(loc=L, type=TokenType.OPERATOR, text="*"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="2"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="else"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="c"),
+        Token(loc=L, type=TokenType.OPERATOR, text="/"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="3")
+    ]
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=Identifier(name='a'), op='+', right=Literal(value=1)),
+        operator='if', then_branch=BinaryOp(
+            left=Identifier(name='b'), op='*', right=Literal(value=2)), else_branch=BinaryOp(
+            left=Identifier(name="c"), op="/", right=Literal(3)
+        )
+    )

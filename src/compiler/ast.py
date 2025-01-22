@@ -18,6 +18,14 @@ class Identifier(Expression):
 
 
 @dataclass
+class IfExpression(Expression):
+    condition_branch: Expression
+    operator: str
+    then_branch: Expression
+    else_branch: Expression | None
+
+
+@dataclass
 class BinaryOp(Expression):
     """AST node for a binary operation like `A + B`"""
     left: Expression
