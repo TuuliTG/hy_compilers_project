@@ -368,3 +368,21 @@ def test_function_call_with_binary_operation() -> None:
             )
         ]
     )
+
+
+def test_remainder_operator() -> None:
+    tokens = tokenize("a%b")
+    ast = parse(tokens)
+    assert ast == BinaryOp(left=Identifier(name="a"),
+                           op="%", right=Identifier(name="b"))
+
+
+def test_remainder_operator_precedence() -> None:
+    tokens = tokenize("1+a%b")
+    ast = parse(tokens)
+    assert ast == BinaryOp(
+        left=Literal(1), op="+", right=BinaryOp(
+            left=Identifier(name="a"), op="%",
+            right=Identifier(name="b")
+        )
+    )

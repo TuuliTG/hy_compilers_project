@@ -10,6 +10,15 @@ return an AST representing what was parsed.
 Otherwise, raise an error.
 """
 
+left_associative_binary_operators = [
+    ['or'],
+    ['and'],
+    ['==', '!='],
+    ['<', '<=', '>', '>='],
+    ['+', '-'],
+    ['*', '/', '%'],
+]
+
 
 def parse(tokens: list[Token]) -> ast.Expression:
     pos = 0
@@ -55,7 +64,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
 
     def parse_term() -> ast.Expression:
         left = parse_factor()
-        while peek().text in ['*', '/']:
+        while peek().text in ['*', '/', '%']:
             operator_token = consume()
             operator = operator_token.text
             right = parse_factor()
@@ -113,9 +122,8 @@ def parse(tokens: list[Token]) -> ast.Expression:
         if (peek().text == 'if'):
             return parse_if_expression()
         left = parse_term()
-        if isinstance(left, compiler.ast.Identifier):
-            if peek().text == '(':
-                return parse_function_call(function_name=left.name)
+        if isinstance(left, compiler.ast.Identifier) and peek().text == '(':
+            return parse_function_call(function_name=left.name)
         while peek().text in ['+', '-']:
             operator_token = consume()
             operator = operator_token.text

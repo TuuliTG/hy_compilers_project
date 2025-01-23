@@ -190,3 +190,11 @@ def test_function_call() -> None:
         Token(loc=L, type=TokenType.IDENTIFIER, text="z"),
         Token(loc=L, type=TokenType.PUNCTUATION, text=")")
     ]
+
+
+def test_remainder_operator() -> None:
+    assert tokenize("a%b") == [
+        Token(loc=L, type=TokenType.IDENTIFIER, text="a"),
+        Token(loc=L, type=TokenType.OPERATOR, text="%"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="b"),
+    ]
