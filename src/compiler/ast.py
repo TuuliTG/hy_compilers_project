@@ -20,9 +20,14 @@ class Identifier(Expression):
 @dataclass
 class IfExpression(Expression):
     condition_branch: Expression
-    operator: str
     then_branch: Expression
     else_branch: Expression | None
+
+
+@dataclass
+class FunctionExpression(Expression):
+    function_name: str
+    args: list[Expression]
 
 
 @dataclass

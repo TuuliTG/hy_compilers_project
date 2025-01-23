@@ -1,3 +1,4 @@
+import compiler
 from compiler.domain import Token, TokenType
 import compiler.ast as ast
 
@@ -85,8 +86,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
         return expr
 
     def parse_if_expression() -> ast.Expression:
-        if_token = consume('if')
-        if_token_text = if_token.text
+        consume('if')
         condition_branch = parse_expression()
         consume('then')
         then_branch = parse_expression()
@@ -94,13 +94,28 @@ def parse(tokens: list[Token]) -> ast.Expression:
         if (peek().text == 'else'):
             consume('else')
             else_branch = parse_expression()
-            return ast.IfExpression(condition_branch, operator=if_token_text, then_branch=then_branch, else_branch=else_branch)
-        return ast.IfExpression(condition_branch, operator=if_token_text, then_branch=then_branch, else_branch=None)
+            return ast.IfExpression(condition_branch, then_branch=then_branch, else_branch=else_branch)
+        return ast.IfExpression(condition_branch, then_branch=then_branch, else_branch=None)
+
+    def parse_function_call(function_name):
+        consume('(')
+        args: list[ast.Expression] = []
+        while True:
+            args.append(parse_expression())
+            token = consume([',', ')'])
+            if token.text == ',':
+                continue
+            else:
+                break
+        return ast.FunctionExpression(function_name=function_name, args=args)
 
     def parse_expression() -> ast.Expression:
         if (peek().text == 'if'):
             return parse_if_expression()
         left = parse_term()
+        if isinstance(left, compiler.ast.Identifier):
+            if peek().text == '(':
+                return parse_function_call(function_name=left.name)
         while peek().text in ['+', '-']:
             operator_token = consume()
             operator = operator_token.text

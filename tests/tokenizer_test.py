@@ -177,3 +177,16 @@ def test_comment_cannot_start_with_end_tag() -> None:
     with pytest.raises(ValueError) as e:
         tokenize("*/ here is a faulty multiline comment. ")
     assert "Invalid character or token" in str(e.value)
+
+
+def test_function_call() -> None:
+    assert tokenize("f(x, y + z)") == [
+        Token(loc=L, type=TokenType.IDENTIFIER, text="f"),
+        Token(loc=L, type=TokenType.PUNCTUATION, text="("),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="x"),
+        Token(loc=L, type=TokenType.PUNCTUATION, text=","),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="y"),
+        Token(loc=L, type=TokenType.OPERATOR, text="+"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="z"),
+        Token(loc=L, type=TokenType.PUNCTUATION, text=")")
+    ]

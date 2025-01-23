@@ -1,7 +1,8 @@
 from compiler.domain import Token, SourceLocation, L, TokenType
-from compiler.ast import BinaryOp, Expression, IfExpression, Literal, Identifier
+from compiler.ast import BinaryOp, Expression, FunctionExpression, IfExpression, Literal, Identifier
 from compiler.parser import parse
 import pytest
+from compiler.tokenizer import tokenize
 
 
 def test_parse_sum() -> None:
@@ -283,8 +284,7 @@ def test_parse_if_expression() -> None:
     ast = parse(tokens)
     assert ast == IfExpression(
         condition_branch=BinaryOp(
-            left=Identifier(name='a'), op='+', right=Literal(value=1)),
-        operator='if', then_branch=BinaryOp(
+            left=Identifier(name='a'), op='+', right=Literal(value=1)), then_branch=BinaryOp(
             left=Identifier(name='b'), op='*', right=Literal(value=2)), else_branch=None
     )
 
@@ -308,8 +308,63 @@ def test_parse_if_expression_with_else_branch() -> None:
     assert ast == IfExpression(
         condition_branch=BinaryOp(
             left=Identifier(name='a'), op='+', right=Literal(value=1)),
-        operator='if', then_branch=BinaryOp(
+        then_branch=BinaryOp(
             left=Identifier(name='b'), op='*', right=Literal(value=2)), else_branch=BinaryOp(
             left=Identifier(name="c"), op="/", right=Literal(3)
         )
+    )
+
+
+def test_if_statement_as_part_of_expression() -> None:
+    tokens = [
+        Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
+        Token(loc=L, type=TokenType.OPERATOR, text="+"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="if"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="2"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="then"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="2"),
+        Token(loc=L, type=TokenType.IDENTIFIER, text="else"),
+        Token(loc=L, type=TokenType.INT_LITERAL, text="3")
+    ]
+    ast = parse(tokens)
+    assert ast == BinaryOp(
+        left=Literal(value=1), op='+', right=IfExpression(
+            condition_branch=Literal(value=2),
+            then_branch=Literal(value=2), else_branch=Literal(value=3))
+    )
+
+
+def test_nested_if_expressions() -> None:
+    tokens = tokenize("if a then if b then b + 1 else c + 2")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=Identifier(name='a'),
+        then_branch=IfExpression(
+            condition_branch=Identifier(name='b'),
+            then_branch=BinaryOp(left=Identifier(name='b'),
+                                 op='+', right=Literal(value=1)),
+            else_branch=BinaryOp(left=Identifier(name='c'), op='+', right=Literal(value=2))),
+        else_branch=None)
+
+
+def test_function_call() -> None:
+    tokens = tokenize("f(a,b,c)")
+    ast = parse(tokens)
+
+    assert ast == FunctionExpression(
+        function_name="f", args=[
+            Identifier(name="a"), Identifier(name="b"), Identifier(name="c")]
+    )
+
+
+def test_function_call_with_binary_operation() -> None:
+    tokens = tokenize("f(a,b+c)")
+    ast = parse(tokens)
+
+    assert ast == FunctionExpression(
+        function_name="f", args=[
+            Identifier(name="a"), BinaryOp(
+                left=Identifier(name="b"), op='+', right=Identifier(name='c')
+            )
+        ]
     )
