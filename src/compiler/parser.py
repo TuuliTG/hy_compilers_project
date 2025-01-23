@@ -4,7 +4,7 @@ import compiler.ast as ast
 
 """
 If the tokens starting at pos match the things that the parsing function wants to parse,
-then move pos forward past the matching tokens and 
+then move pos forward past the matching tokens and
 return an AST representing what was parsed.
 
 Otherwise, raise an error.
@@ -55,25 +55,14 @@ def parse(tokens: list[Token]) -> ast.Expression:
         token = consume()
         return ast.Literal(int(token.text))
 
-    def parse_identifier() -> ast.Identifier:
+    def parse_identifier() -> ast.Expression:
         if peek().type != TokenType.IDENTIFIER:
             raise Exception(f'{peek().loc}: expected an identifier')
         else:
             token = consume()
-            return ast.Identifier((token.text))
-
-    def parse_term() -> ast.Expression:
-        left = parse_factor()
-        while peek().text in ['*', '/', '%']:
-            operator_token = consume()
-            operator = operator_token.text
-            right = parse_factor()
-            left = ast.BinaryOp(
-                left,
-                operator,
-                right
-            )
-        return left
+            if peek().text == '(':
+                return parse_function_call(function_name=token.text)
+            return ast.Identifier(token.text)
 
     def parse_factor() -> ast.Expression:
         if peek().text == '(':
@@ -90,19 +79,19 @@ def parse(tokens: list[Token]) -> ast.Expression:
 
     def parse_parenthesized() -> ast.Expression:
         consume('(')
-        expr = parse_expression()
+        expr = parse_binary_operator_level(0)
         consume(')')
         return expr
 
     def parse_if_expression() -> ast.Expression:
         consume('if')
-        condition_branch = parse_expression()
+        condition_branch = parse_binary_operator_level(0)
         consume('then')
-        then_branch = parse_expression()
+        then_branch = parse_binary_operator_level(0)
 
         if (peek().text == 'else'):
             consume('else')
-            else_branch = parse_expression()
+            else_branch = parse_binary_operator_level(0)
             return ast.IfExpression(condition_branch, then_branch=then_branch, else_branch=else_branch)
         return ast.IfExpression(condition_branch, then_branch=then_branch, else_branch=None)
 
@@ -110,7 +99,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
         consume('(')
         args: list[ast.Expression] = []
         while True:
-            args.append(parse_expression())
+            args.append(parse_binary_operator_level(0))
             token = consume([',', ')'])
             if token.text == ',':
                 continue
@@ -118,23 +107,19 @@ def parse(tokens: list[Token]) -> ast.Expression:
                 break
         return ast.FunctionExpression(function_name=function_name, args=args)
 
-    def parse_expression() -> ast.Expression:
-        if (peek().text == 'if'):
-            return parse_if_expression()
-        left = parse_term()
-        if isinstance(left, compiler.ast.Identifier) and peek().text == '(':
-            return parse_function_call(function_name=left.name)
-        while peek().text in ['+', '-']:
+    def parse_binary_operator_level(level: int) -> ast.Expression:
+        if level == len(left_associative_binary_operators):
+            return parse_factor()
+
+        left = parse_binary_operator_level(level + 1)
+
+        while peek().text in left_associative_binary_operators[level]:
             operator_token = consume()
             operator = operator_token.text
 
-            right = parse_term()
-            left = ast.BinaryOp(
-                left,
-                operator,
-                right
-            )
+            right = parse_binary_operator_level(level + 1)
+            left = ast.BinaryOp(left, operator, right)
 
         return left
 
-    return parse_expression()
+    return parse_binary_operator_level(0)

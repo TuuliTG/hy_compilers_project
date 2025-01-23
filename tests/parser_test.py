@@ -65,7 +65,8 @@ def test_parse_multiple_operations() -> None:
     ]
     ast = parse(tokens)
     assert ast == BinaryOp(left=BinaryOp(left=Literal(
-        value=1), op='+', right=Literal(value=2)), op='-', right=Literal(value=3))
+        value=1), op='+', right=Literal(value=2)), op='-', right=Literal(value=3)
+    )
 
 
 def test_parse_multiple_operations_2() -> None:
@@ -367,6 +368,18 @@ def test_function_call_with_binary_operation() -> None:
                 left=Identifier(name="b"), op='+', right=Identifier(name='c')
             )
         ]
+    )
+
+
+def test_function_call_in_the_middle_of_other_expression() -> None:
+    tokens = tokenize("a + b(x,y) * 2")
+    ast = parse(tokens)
+
+    assert ast == BinaryOp(
+        left=Identifier(name='a'), op='+', right=BinaryOp(
+            left=FunctionExpression(
+                function_name='b', args=[Identifier(name='x'), Identifier(name='y')]), op='*', right=Literal(value=2)
+        )
     )
 
 
