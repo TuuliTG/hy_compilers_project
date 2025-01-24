@@ -1,5 +1,5 @@
 from compiler.domain import Token, SourceLocation, L, TokenType
-from compiler.ast import BinaryOp, Expression, FunctionExpression, IfExpression, Literal, Identifier
+from compiler.ast import BinaryOp, Expression, FunctionExpression, IfExpression, Literal, Identifier, UnaryExpression
 from compiler.parser import parse
 import pytest
 from compiler.tokenizer import tokenize
@@ -397,5 +397,133 @@ def test_remainder_operator_precedence() -> None:
         left=Literal(1), op="+", right=BinaryOp(
             left=Identifier(name="a"), op="%",
             right=Identifier(name="b")
+        )
+    )
+
+
+def test_if_expressions_2() -> None:
+    tokens = tokenize("if a==b then c")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=Identifier(name='a'), op='==', right=Identifier('b')),
+        then_branch=Identifier(name="c"),
+        else_branch=None)
+
+
+def test_if_expressions_3() -> None:
+    tokens = tokenize("if a<=b then c")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=Identifier(name='a'), op='<=', right=Identifier('b')),
+        then_branch=Identifier(name="c"),
+        else_branch=None)
+
+
+def test_if_expressions_4() -> None:
+    tokens = tokenize("if a>=b then c")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=Identifier(name='a'), op='>=', right=Identifier('b')),
+        then_branch=Identifier(name="c"),
+        else_branch=None)
+
+
+def test_if_expressions_5() -> None:
+    tokens = tokenize("if a!=b then c")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=Identifier(name='a'), op='!=', right=Identifier('b')),
+        then_branch=Identifier(name="c"),
+        else_branch=None)
+
+
+def test_if_expressions_6() -> None:
+    tokens = tokenize("if a>b then c")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=Identifier(name='a'), op='>', right=Identifier('b')),
+        then_branch=Identifier(name="c"),
+        else_branch=None)
+
+
+def test_and_expression() -> None:
+    tokens = tokenize("if a>b and b == 2 then c")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=BinaryOp(left=Identifier(name='a'), op='>',
+                          right=Identifier(name='b')),
+            op='and', right=BinaryOp(
+                left=Identifier(name='b'), op='==', right=Literal(value=2))),
+        then_branch=Identifier(name='c'), else_branch=None)
+
+
+def test_and_or_expressions() -> None:
+    tokens = tokenize("if a>b and b == 2 or b == 3 then c")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=BinaryOp(
+                left=BinaryOp(
+                    left=Identifier(name='a'), op='>', right=Identifier(name='b')), op='and', right=BinaryOp(
+                    left=Identifier(name='b'), op='==', right=Literal(value=2))), op='or', right=BinaryOp(
+                left=Identifier(name='b'), op='==', right=Literal(value=3))),
+        then_branch=Identifier(name='c'), else_branch=None
+    )
+
+
+def test_assignment_operator() -> None:
+    tokens = tokenize("a=b*5")
+    ast = parse(tokens)
+    assert ast == BinaryOp(
+        left=Identifier(name="a"), op="=", right=BinaryOp(
+            left=Identifier(name="b"), op="*", right=Literal(5)
+        )
+    )
+
+
+def test_chaining_of_not() -> None:
+    tokens = tokenize("if not not (a==b) then a=b")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=UnaryExpression(
+            operator="not", operand=UnaryExpression(
+                operator="not", operand=BinaryOp(
+                    left=Identifier(name="a"), op="==", right=Identifier(name="b")
+                )
+            )
+        ),
+        then_branch=BinaryOp(
+            left=Identifier(
+                name="a"
+            ), op="=", right=Identifier(name="b")
+        ),
+        else_branch=None
+    )
+
+
+def test_different_operand_levels_mixed() -> None:
+    tokens = tokenize(
+        "if a + b == 5 * 3 then c = f(a,b) else b = 5 / 8 + 3 - 5")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=BinaryOp(
+            left=BinaryOp(
+                left=Identifier(name='a'), op='+', right=Identifier(name='b')), op='==', right=BinaryOp(
+                left=Literal(value=5), op='*', right=Literal(value=3))),
+        then_branch=BinaryOp(
+            left=Identifier(name='c'), op='=', right=FunctionExpression(
+                function_name='f', args=[Identifier(name='a'), Identifier(name='b')])),
+        else_branch=BinaryOp(
+            left=Identifier(name='b'), op='=', right=BinaryOp(
+                left=BinaryOp(
+                    left=BinaryOp(left=Literal(value=5), op='/', right=Literal(value=8)), op='+', right=Literal(value=3)
+                ), op='-', right=Literal(value=5)
+            )
         )
     )

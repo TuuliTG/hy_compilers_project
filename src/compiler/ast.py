@@ -31,6 +31,12 @@ class FunctionExpression(Expression):
 
 
 @dataclass
+class UnaryExpression(Expression):
+    operator: str
+    operand: Expression
+
+
+@dataclass
 class BinaryOp(Expression):
     """AST node for a binary operation like `A + B`"""
     left: Expression

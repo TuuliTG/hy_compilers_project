@@ -19,6 +19,20 @@ left_associative_binary_operators = [
     ['*', '/', '%'],
 ]
 
+unary_operators = [
+    ['not', '-']
+]
+
+right_associative_operators = [
+    ['=']
+]
+
+precedence_order_list = (
+    right_associative_operators
+    + left_associative_binary_operators
+    + unary_operators
+)
+
 
 def parse(tokens: list[Token]) -> ast.Expression:
     pos = 0
@@ -107,19 +121,45 @@ def parse(tokens: list[Token]) -> ast.Expression:
                 break
         return ast.FunctionExpression(function_name=function_name, args=args)
 
-    def parse_binary_operator_level(level: int) -> ast.Expression:
-        if level == len(left_associative_binary_operators):
-            return parse_factor()
-
-        left = parse_binary_operator_level(level + 1)
-
-        while peek().text in left_associative_binary_operators[level]:
+    def parse_unary_operation(level, current_level_tokens):
+        if peek().text in current_level_tokens:
             operator_token = consume()
             operator = operator_token.text
+            operand = parse_binary_operator_level(0)
+            return ast.UnaryExpression(operator=operator, operand=operand)
+        else:
+            return parse_binary_operator_level(level=level+1)
 
-            right = parse_binary_operator_level(level + 1)
-            left = ast.BinaryOp(left, operator, right)
+    def parse_binary_operator_level(level: int) -> ast.Expression:
+        if level == len(precedence_order_list):
+            return parse_factor()
 
-        return left
+        current_level_tokens = precedence_order_list[level]
+
+        if current_level_tokens in right_associative_operators:
+            left = parse_binary_operator_level(level + 1)
+            if peek().text in current_level_tokens:
+                operator_token = consume()
+                operator = operator_token.text
+                right = parse_binary_operator_level(
+                    level)
+                return ast.BinaryOp(left, operator, right)
+            return left
+
+        elif current_level_tokens in left_associative_binary_operators:
+            left = parse_binary_operator_level(level + 1)
+            while peek().text in current_level_tokens:
+                operator_token = consume()
+                operator = operator_token.text
+                right = parse_binary_operator_level(level + 1)
+                left = ast.BinaryOp(left, operator, right)
+            return left
+
+        elif current_level_tokens in unary_operators:
+            return parse_unary_operation(
+                level=level, current_level_tokens=current_level_tokens)
+
+        raise Exception(
+            f"Unsupported operator type at precedence level {level}")
 
     return parse_binary_operator_level(0)
