@@ -527,3 +527,33 @@ def test_different_operand_levels_mixed() -> None:
             )
         )
     )
+
+
+def test_chained_assignment_is_parsed_correctly() -> None:
+    tokens = tokenize("a = b = c")
+    ast = parse(tokens)
+    assert ast == BinaryOp(
+        left=Identifier(name="a"), op="=", right=BinaryOp(
+            left=Identifier(name="b"), op="=", right=Identifier(name="c")
+        )
+    )
+
+
+def test_chaining_of_not_with_both_not_and_minus_sign() -> None:
+    tokens = tokenize("if not  -(a==b) then a=b")
+    ast = parse(tokens)
+    assert ast == IfExpression(
+        condition_branch=UnaryExpression(
+            operator="not", operand=UnaryExpression(
+                operator="-", operand=BinaryOp(
+                    left=Identifier(name="a"), op="==", right=Identifier(name="b")
+                )
+            )
+        ),
+        then_branch=BinaryOp(
+            left=Identifier(
+                name="a"
+            ), op="=", right=Identifier(name="b")
+        ),
+        else_branch=None
+    )
