@@ -34,8 +34,7 @@ precedence_order_list = (
 )
 
 
-def parse(tokens: list[Token]) -> ast.Expression:
-    pos = 0
+def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
 
     def peek() -> Token:
         if tokens:
@@ -89,9 +88,16 @@ def parse(tokens: list[Token]) -> ast.Expression:
             return parse_int_literal()
         elif peek().type == TokenType.IDENTIFIER:
             return parse_identifier()
+        elif peek().type == TokenType.PUNCTUATION:
+            return parse_punctuation()
         else:
             raise Exception(
-                f'{peek().loc}: expected "(", an integer literal or an identifier')
+                f'{peek().loc}: expected "(", an integer literal or an identifier but got {peek().text}, {peek().type}')
+
+    def parse_punctuation() -> ast.Expression | None:
+        token = consume()
+        if token.text == ';':
+            return
 
     def parse_parenthesized() -> ast.Expression:
         consume('(')
@@ -188,4 +194,48 @@ def parse(tokens: list[Token]) -> ast.Expression:
         raise Exception(
             f"Unsupported operator type at precedence level {level}")
 
-    return parse_binary_operator_level(0)
+    return parse_binary_operator_level(0), pos
+
+
+def parse_expressions(tokens: list[Token]) -> ast.Expression | None:
+    ends_with_semicolon = False
+    expressions = []
+    pos = 0
+    if not tokens:
+        return None
+    while (pos < len(tokens)):
+        expression, new_pos = parse(tokens, pos)
+        ends_with_semicolon = False
+
+        _validate_that_expression_ends_with_semicolumn_if_needed(
+            tokens, new_pos, expression)
+
+        if len(tokens) > new_pos and tokens[new_pos].text == ';':
+            ends_with_semicolon = True
+
+        pos = new_pos + 1
+        expressions.append(expression)
+
+    if len(expressions) == 1 and isinstance(expressions[0], ast.BlockExpression):
+        return expressions[0]
+
+    if _should_append_unit_in_the_end(expressions, ends_with_semicolon):
+        expressions.append(ast.Literal(value=None))
+
+    return ast.BlockExpression(expressions=expressions)
+
+
+def _validate_that_expression_ends_with_semicolumn_if_needed(tokens, new_position, latest_expression):
+    if len(tokens) > new_position and not tokens[new_position].text == ';':
+        if not isinstance(latest_expression, ast.BlockExpression):
+            raise Exception(f"""
+              {tokens[new_position-1].loc}: expected \';\', but found '{tokens[new_position-1].text}' """
+            )
+
+
+def _should_append_unit_in_the_end(expressions, ends_with_semicolon) -> bool:
+    if not isinstance(expressions[-1], ast.BlockExpression):
+        if ends_with_semicolon:
+            return True
+    else:
+        return False
