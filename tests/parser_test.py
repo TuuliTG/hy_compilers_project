@@ -681,3 +681,24 @@ def test_missing_semicolumn_raises_error() -> None:
         parse_expressions(tokens)
     assert "expected ';', but found 'b'" in str(
         e.value)
+
+
+def test_missing_semicolumn_in_last_expression_does_not_raise_error() -> None:
+    tokens = tokenize("a = b; \n x = 1")
+
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        BinaryOp(left=Identifier(name="a"), op="=",
+                 right=Identifier(name="b")),
+        BinaryOp(left=Identifier(name="x"), op="=", right=Literal(1))
+    ])
+
+
+def test_semicolumn_can_exist_after_curly_braces() -> None:
+    tokens = tokenize("{a = b}; \n x = 1")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        BlockExpression(expressions=[BinaryOp(left=Identifier(
+            name="a"), op="=", right=Identifier(name="b"))]),
+        BinaryOp(left=Identifier(name="x"), op="=", right=Literal(1))
+    ])
