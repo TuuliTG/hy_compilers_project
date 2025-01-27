@@ -83,6 +83,8 @@ def parse(tokens: list[Token]) -> ast.Expression:
             return parse_parenthesized()
         elif peek().text == "if":
             return parse_if_expression()
+        elif peek().text == '{':
+            return parse_block()
         elif peek().type == TokenType.INT_LITERAL:
             return parse_int_literal()
         elif peek().type == TokenType.IDENTIFIER:
@@ -96,6 +98,24 @@ def parse(tokens: list[Token]) -> ast.Expression:
         expr = parse_binary_operator_level(0)
         consume(')')
         return expr
+
+    def parse_block() -> ast.Expression:
+        ends_with_semicolon = False
+        consume('{')
+        expressions: list[ast.Expression] = []
+        while True:
+            expressions.append(parse_binary_operator_level(0))
+            ends_with_semicolon = False
+            if peek().text == ';':
+                consume(';')
+                ends_with_semicolon = True
+            if peek().text == '}':
+                consume('}')
+                if ends_with_semicolon:
+                    expressions.append(ast.Literal(value=None))
+                return ast.BlockExpression(
+                    expressions=expressions
+                )
 
     def parse_if_expression() -> ast.Expression:
         consume('if')

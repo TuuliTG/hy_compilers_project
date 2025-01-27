@@ -1,5 +1,5 @@
 from compiler.domain import Token, SourceLocation, L, TokenType
-from compiler.ast import BinaryOp, Expression, FunctionExpression, IfExpression, Literal, Identifier, UnaryExpression
+from compiler.ast import BinaryOp, BlockExpression, Expression, FunctionExpression, IfExpression, Literal, Identifier, UnaryExpression
 from compiler.parser import parse
 import pytest
 from compiler.tokenizer import tokenize
@@ -556,4 +556,51 @@ def test_chaining_of_not_with_both_not_and_minus_sign() -> None:
             ), op="=", right=Identifier(name="b")
         ),
         else_branch=None
+    )
+
+
+def test_simple_block() -> None:
+    tokens = tokenize("{f(a);\nx = y;\nf(x)}")
+    ast = parse(tokens)
+    assert ast == BlockExpression(expressions=[
+        FunctionExpression(function_name="f", args=[Identifier(name="a")]),
+        BinaryOp(left=Identifier(name="x"), op="=",
+                 right=Identifier(name="y")),
+        FunctionExpression(function_name="f", args=[Identifier(name="x")])
+    ]
+    )
+
+
+def test_expression_after_block() -> None:
+    tokens = tokenize("{f(a);\nx = y;\nf(x)}\nif a==b then c")
+    ast = parse(tokens)
+    assert ast == BlockExpression(expressions=[
+        BlockExpression(expressions=[
+            FunctionExpression(function_name="f", args=[Identifier(name="a")]),
+            BinaryOp(left=Identifier(name="x"), op="=",
+                     right=Identifier(name="y")),
+            FunctionExpression(function_name="f", args=[Identifier(name="x")])
+        ]
+        ),
+        IfExpression(
+            condition_branch=BinaryOp(
+                left=Identifier(name="a"), op="==", right=Identifier(name="c")
+            ), then_branch=Identifier(name="c"), else_branch=None)
+    ]
+    )
+
+
+def test_block_without_curly_braces() -> None:
+    tokens = tokenize("f(a);\nx = y;\nf(x);\nif a==b then c")
+    ast = parse(tokens)
+    assert ast == BlockExpression(expressions=[
+        FunctionExpression(function_name="f", args=[Identifier(name="a")]),
+        BinaryOp(left=Identifier(name="x"), op="=",
+                 right=Identifier(name="y")),
+        FunctionExpression(function_name="f", args=[Identifier(name="x")]),
+        IfExpression(
+            condition_branch=BinaryOp(
+                left=Identifier(name="a"), op="==", right=Identifier(name="c")
+            ), then_branch=Identifier(name="c"), else_branch=None)
+    ]
     )

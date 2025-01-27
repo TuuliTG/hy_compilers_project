@@ -42,3 +42,8 @@ class BinaryOp(Expression):
     left: Expression
     op: str
     right: Expression
+
+
+@dataclass
+class BlockExpression(Expression):
+    expressions: list[Expression]
