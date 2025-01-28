@@ -679,7 +679,7 @@ def test_missing_semicolumn_raises_error() -> None:
     tokens = tokenize("a = b \n x = 1")
     with pytest.raises(Exception) as e:
         parse_expressions(tokens)
-    assert "expected ';', but found 'b'" in str(
+    assert "Expected ';', but found 'b'" in str(
         e.value)
 
 
@@ -717,7 +717,7 @@ def test_block_2() -> None:
     tokens = tokenize("{ a b }")
     with pytest.raises(Exception) as e:
         parse_expressions(tokens)
-    assert "expected ';', but found 'b'" in str(
+    assert "Expected ';', but found 'b'" in str(
         e.value)
 
 
@@ -740,3 +740,70 @@ def test_block_does_not_end_with_curly_braces() -> None:
         parse_expressions(tokens)
     assert "Expected }" in str(
         e.value)
+
+
+def test_block_does_not_end_with_curly_braces_when_block_is_in_the_middle_of_the_code() -> None:
+    tokens = tokenize("x = 1; { a; b; {y = 2} f(a);")
+    with pytest.raises(Exception) as e:
+        parse_expressions(tokens)
+    assert "Expected }" in str(
+        e.value)
+
+
+def test_block_4() -> None:
+    tokens = tokenize("{ if true then { a }; b }")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        IfExpression(
+            condition_branch=Identifier("true"),
+            then_branch=BlockExpression(expressions=[Identifier("a")]),
+            else_branch=None),
+        Identifier(name="b")
+    ])
+
+
+def test_block_5() -> None:
+    tokens = tokenize("{ if true then { a } b c }")
+    with pytest.raises(Exception) as e:
+        parse_expressions(tokens)
+    assert "Expected ';'" in str(
+        e.value)
+
+
+def test_block_6() -> None:
+    tokens = tokenize("{ if true then { a } b; c }")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        IfExpression(
+            condition_branch=Identifier("true"),
+            then_branch=BlockExpression(expressions=[Identifier("a")]),
+            else_branch=None),
+        Identifier(name="b"),
+        Identifier(name="c")
+    ])
+
+
+def test_block_7() -> None:
+    tokens = tokenize("{ if true then { a } else { b } 3 }")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        IfExpression(
+            condition_branch=Identifier("true"),
+            then_branch=BlockExpression(expressions=[Identifier("a")]),
+            else_branch=BlockExpression(expressions=[Identifier(name="b")])),
+        Literal(3)
+    ])
+
+
+def test_block_8() -> None:
+    tokens = tokenize("x = { { f(a) } { b } }")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(
+        expressions=[BinaryOp(left=Identifier(name="x"), op="=", right=BlockExpression(
+            expressions=[
+                BlockExpression(expressions=[FunctionExpression(
+                    function_name="f", args=[Identifier(name="a")])]),
+                BlockExpression(expressions=[Identifier(name="b")])
+            ]
+        )
+        )])
