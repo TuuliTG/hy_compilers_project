@@ -106,7 +106,6 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         return expr
 
     def parse_block() -> ast.Expression:
-        ends_with_semicolon = False
         consume('{')
         expressions: list[ast.Expression] = []
         while True:
@@ -115,6 +114,15 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
             if peek().text == ';':
                 consume(';')
                 ends_with_semicolon = True
+
+            # ; not needed after curly braces and before end of the block. Otherwise raise an error
+            elif peek().type != TokenType.END and tokens[pos-1].text != '}' and peek().text != "}":
+                raise Exception(f"""
+                  {tokens[pos].loc}: expected \';\', but found '{tokens[pos].text}' """
+                )
+            elif peek().type == TokenType.END:
+                raise Exception("Expected } but found end-of-file")
+            # Block ends. If latest expression ended with semicolon, add Literal value None
             if peek().text == '}':
                 consume('}')
                 if ends_with_semicolon:
@@ -208,7 +216,8 @@ def parse_expressions(tokens: list[Token]) -> ast.Expression | None:
         ends_with_semicolon = False
 
         _validate_that_expression_ends_with_semicolumn_if_needed(
-            tokens, new_pos, expression)
+            tokens, new_pos, expression
+        )
 
         if len(tokens) > new_pos and tokens[new_pos].text == ';':
             ends_with_semicolon = True

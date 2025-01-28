@@ -702,3 +702,41 @@ def test_semicolumn_can_exist_after_curly_braces() -> None:
             name="a"), op="=", right=Identifier(name="b"))]),
         BinaryOp(left=Identifier(name="x"), op="=", right=Literal(1))
     ])
+
+
+def test_block_1() -> None:
+    tokens = tokenize("{ { a } { b } }")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        BlockExpression(expressions=[Identifier(name="a")]),
+        BlockExpression(expressions=[Identifier(name="b")])
+    ])
+
+
+def test_block_2() -> None:
+    tokens = tokenize("{ a b }")
+    with pytest.raises(Exception) as e:
+        parse_expressions(tokens)
+    assert "expected ';', but found 'b'" in str(
+        e.value)
+
+
+def test_block_3() -> None:
+    tokens = tokenize("{ if true then { a } b }")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(
+        expressions=[
+            IfExpression(condition_branch=Identifier("true"), then_branch=BlockExpression(
+                expressions=[Identifier(name="a")]
+            ), else_branch=None),
+            Identifier(name="b")
+        ]
+    )
+
+
+def test_block_does_not_end_with_curly_braces() -> None:
+    tokens = tokenize("{ a; b ")
+    with pytest.raises(Exception) as e:
+        parse_expressions(tokens)
+    assert "Expected }" in str(
+        e.value)
