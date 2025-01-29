@@ -47,3 +47,9 @@ class BinaryOp(Expression):
 @dataclass
 class BlockExpression(Expression):
     expressions: list[Expression]
+
+
+@dataclass
+class VariableDeclaration(Expression):
+    variable_name: str
+    initializer: Expression

@@ -71,6 +71,9 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
     def parse_identifier() -> ast.Expression:
         if peek().type != TokenType.IDENTIFIER:
             raise Exception(f'{peek().loc}: expected an identifier')
+        elif peek().text == 'var':
+            raise Exception(
+                "Variable declaration is only allowed in top level")
         else:
             token = consume()
             if peek().text == '(':
@@ -109,7 +112,18 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         consume('{')
         expressions: list[ast.Expression] = []
         while True:
-            expressions.append(parse_binary_operator_level(0))
+            if peek().text == "var":
+                consume("var")
+                if peek().type != TokenType.IDENTIFIER:
+                    raise Exception(f'{peek().loc}: expected an identifier')
+                variable_name = consume().text
+                consume("=")
+                initializer = parse_binary_operator_level(0)
+                expression = ast.VariableDeclaration(
+                    variable_name=variable_name, initializer=initializer)
+            else:
+                expression = parse_binary_operator_level(0)
+            expressions.append(expression)
             ends_with_semicolon = False
             if peek().text == ';':
                 consume(';')
@@ -205,6 +219,18 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
     return parse_binary_operator_level(0), pos
 
 
+def parse_variable_declaration(tokens, pos) -> ast.Expression:
+    if tokens[pos].type != TokenType.IDENTIFIER:
+        raise Exception(f'{tokens[pos].loc}: expected an identifier')
+    variable_name = tokens[pos].text
+    pos += 1
+    if tokens[pos].text != "=":
+        raise ("Expected =")
+    pos += 1
+    initializer, new_pos = parse(tokens, pos)
+    return ast.VariableDeclaration(variable_name=variable_name, initializer=initializer), new_pos
+
+
 def parse_expressions(tokens: list[Token]) -> ast.Expression | None:
     ends_with_semicolon = False
     expressions = []
@@ -212,7 +238,13 @@ def parse_expressions(tokens: list[Token]) -> ast.Expression | None:
     if not tokens:
         return None
     while (pos < len(tokens)):
-        expression, new_pos = parse(tokens, pos)
+        if tokens[pos].text == "var":
+            pos += 1
+            expression, new_pos = parse_variable_declaration(
+                tokens, pos)
+
+        else:
+            expression, new_pos = parse(tokens, pos)
         ends_with_semicolon = False
 
         _validate_that_expression_ends_with_semicolumn_if_needed(

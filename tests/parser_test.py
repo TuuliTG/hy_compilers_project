@@ -1,5 +1,5 @@
 from compiler.domain import Token, SourceLocation, L, TokenType
-from compiler.ast import BinaryOp, BlockExpression, Expression, FunctionExpression, IfExpression, Literal, Identifier, UnaryExpression
+from compiler.ast import BinaryOp, BlockExpression, Expression, FunctionExpression, IfExpression, Literal, Identifier, UnaryExpression, VariableDeclaration
 from compiler.parser import parse, parse_expressions
 import pytest
 from compiler.tokenizer import tokenize
@@ -807,3 +807,36 @@ def test_block_8() -> None:
             ]
         )
         )])
+
+
+def test_simple_variable_declaration() -> None:
+    tokens = tokenize("var x = 1")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        VariableDeclaration(variable_name="x", initializer=Literal(1))
+    ])
+
+
+def test_variable_declaration() -> None:
+    tokens = tokenize("var x = f(a)")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        VariableDeclaration(variable_name="x", initializer=FunctionExpression(
+            function_name="f", args=[Identifier(name="a")]))
+    ])
+
+
+def test_dont_allow_variable_declaration_inside_if_statement() -> None:
+    tokens = tokenize("if a == 2 then var x = 1")
+    with pytest.raises(Exception) as e:
+        parse_expressions(tokens)
+    assert "Variable declaration is only allowed in top level" in str(
+        e.value)
+
+
+def test_simple_variable_declaration_inside_block() -> None:
+    tokens = tokenize("{var x = 1}")
+    ast = parse_expressions(tokens)
+    assert ast == BlockExpression(expressions=[
+        VariableDeclaration(variable_name="x", initializer=Literal(1))
+    ])
