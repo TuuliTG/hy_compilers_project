@@ -1,5 +1,5 @@
 import compiler
-from compiler.domain import Token, TokenType
+from compiler.domain import L, Token, TokenType
 import compiler.ast as ast
 
 """
@@ -66,19 +66,19 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         if peek().type != TokenType.INT_LITERAL:
             raise Exception(f'{peek().loc}: expected an integer literal')
         token = consume()
-        return ast.Literal(int(token.text))
+        return ast.Literal(location=token.loc, value=int(token.text))
 
     def parse_identifier() -> ast.Expression:
         if peek().type != TokenType.IDENTIFIER:
             raise Exception(f'{peek().loc}: expected an identifier')
         elif peek().text == 'var':
             raise Exception(
-                "Variable declaration is only allowed in top level")
+                f"Variable declaration is only allowed in top level: {peek().loc}")
         else:
             token = consume()
             if peek().text == '(':
-                return parse_function_call(function_name=token.text)
-            return ast.Identifier(token.text)
+                return parse_function_call(function_name=token.text, location=token.loc)
+            return ast.Identifier(location=token.loc, name=token.text)
 
     def parse_factor() -> ast.Expression:
         if peek().text == '(':
@@ -133,13 +133,14 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
             if peek().text == '}':
                 consume('}')
                 if ends_with_semicolon:
-                    expressions.append(ast.Literal(value=None))
-                return ast.BlockExpression(
-                    expressions=expressions
-                )
+                    expressions.append(ast.Literal(
+                        location=expressions[0].location, value=None))
+                return ast.BlockExpression(expressions[0].location,
+                                           expressions=expressions
+                                           )
 
     def parse_if_expression() -> ast.Expression:
-        consume('if')
+        if_token = consume('if')
         condition_branch = parse_binary_operator_level(0)
         consume('then')
         then_branch = parse_binary_operator_level(0)
@@ -147,10 +148,15 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         if (peek().text == 'else'):
             consume('else')
             else_branch = parse_binary_operator_level(0)
-            return ast.IfExpression(condition_branch, then_branch=then_branch, else_branch=else_branch)
-        return ast.IfExpression(condition_branch, then_branch=then_branch, else_branch=None)
+            return ast.IfExpression(
+                if_token.loc,
+                condition_branch=condition_branch,
+                then_branch=then_branch,
+                else_branch=else_branch
+            )
+        return ast.IfExpression(if_token.loc, condition_branch=condition_branch, then_branch=then_branch, else_branch=None)
 
-    def parse_function_call(function_name):
+    def parse_function_call(function_name, location):
         consume('(')
         args: list[ast.Expression] = []
         while True:
@@ -160,14 +166,14 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
                 continue
             else:
                 break
-        return ast.FunctionExpression(function_name=function_name, args=args)
+        return ast.FunctionExpression(location=location, function_name=function_name, args=args)
 
     def parse_unary_operation(level, current_level_tokens) -> ast.Expression:
         if peek().text in current_level_tokens:
             operator_token = consume()
             operator = operator_token.text
             operand = parse_binary_operator_level(0)
-            return ast.UnaryExpression(operator=operator, operand=operand)
+            return ast.UnaryExpression(location=operator_token.loc, operator=operator, operand=operand)
         else:
             return parse_binary_operator_level(level=level+1)
 
@@ -178,7 +184,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
             operator = operator_token.text
             right = parse_binary_operator_level(
                 level)
-            return ast.BinaryOp(left, operator, right)
+            return ast.BinaryOp(location=left.location, left=left, op=operator, right=right)
         return left
 
     def parse_left_associative_operation(level, current_level_tokens) -> ast.Expression:
@@ -187,7 +193,10 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
             operator_token = consume()
             operator = operator_token.text
             right = parse_binary_operator_level(level + 1)
-            left = ast.BinaryOp(left, operator, right)
+            left = ast.BinaryOp(
+                location=left.location,
+                left=left, op=operator, right=right
+            )
         return left
 
     def parse_binary_operator_level(level: int) -> ast.Expression:
@@ -210,6 +219,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
             f"Unsupported operator type at precedence level {level}")
 
     def parse_variable_declaration() -> ast.Expression:
+        location = peek().loc
         consume("var")
         if peek().type != TokenType.IDENTIFIER:
             raise Exception(f'{tokens[pos].loc}: expected an identifier')
@@ -217,7 +227,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
 
         consume("=")
         initializer = parse_binary_operator_level(0)
-        return ast.VariableDeclaration(variable_name=variable_name, initializer=initializer)
+        return ast.VariableDeclaration(location=location, variable_name=variable_name, initializer=initializer)
 
     def parse_expressions() -> ast.Expression | None:
         ends_with_semicolon = False
@@ -245,9 +255,9 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
             return expressions[0]
 
         if _should_append_unit_in_the_end(expressions, ends_with_semicolon):
-            expressions.append(ast.Literal(value=None))
+            expressions.append(ast.Literal(location=L, value=None))
 
-        return ast.BlockExpression(expressions=expressions)
+        return ast.BlockExpression(location=expressions[0].location, expressions=expressions)
 
     return parse_expressions()
 

@@ -1,9 +1,12 @@
 from dataclasses import dataclass
 
+from compiler.domain import SourceLocation
+
 
 @dataclass
 class Expression:
     """Base class for AST nodes representing expressions."""
+    location: SourceLocation
 
 
 @dataclass

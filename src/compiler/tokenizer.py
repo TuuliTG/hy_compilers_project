@@ -28,7 +28,7 @@ def tokenize(source_code: str) -> list[Token]:
     line_start = 0
 
     while index < len(source_code):
-        print(f"Evaluating from index {index}")
+        # print(f"Evaluating from index {index}")
 
         whitespace = whitespace_regex.match(source_code, index)
         if whitespace is not None:
@@ -38,14 +38,14 @@ def tokenize(source_code: str) -> list[Token]:
 
         comment = comment_regex.match(source_code, index)
         if comment is not None:
-            print("found comment")
+            # print("found comment")
             index = _skip_comment(source_code, index)
             continue
 
         multiline_comment_start = multiline_comment_start_regex.match(
             source_code, index)
         if multiline_comment_start is not None:
-            print("Found multiline comment start")
+            # print("Found multiline comment start")
             lines_to_add, index = _find_closing_multiline_comment(
                 source_code, index)
             line += lines_to_add
@@ -80,7 +80,7 @@ def tokenize(source_code: str) -> list[Token]:
             tokens.append(token)
             continue
 
-        print("No match for regex found")
+        # print("No match for regex found")
         raise ValueError("Invalid character or token")
     return tokens
 
@@ -94,7 +94,7 @@ def _skip_comment(source_code: str, index: int) -> int:
 
 
 def _handle_white_space(whitespace: re.Match, line: int, line_start: int, index: int) -> tuple[int, int, int]:
-    print(f"found whitespace {whitespace}")
+    # print(f"found whitespace {whitespace}")
     if whitespace.group() == "\n":
         line += 1
         line_start = whitespace.end()
@@ -104,7 +104,7 @@ def _handle_white_space(whitespace: re.Match, line: int, line_start: int, index:
 
 
 def _handle_integer_operator_or_identifier(type: TokenType, match: re.Match, line: int, line_start: int, index: int) -> tuple[Token, int]:
-    print(f"found token type: {type.value} {match}")
+    # print(f"found token type: {type.value} {match}")
     column = index - line_start
     index = index + len(match.group())
     token = Token(SourceLocation(

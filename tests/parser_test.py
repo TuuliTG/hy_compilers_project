@@ -12,8 +12,11 @@ def test_parse_sum() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="2"),
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(
-        expressions=[BinaryOp(left=Literal(1), op="+", right=Literal(2))])
+    assert ast == BlockExpression(location=L,
+                                  expressions=[
+                                      BinaryOp(location=L, left=Literal(
+                                          location=L, value=1), op="+", right=Literal(location=L, value=2))
+                                  ])
 
 
 def test_parse_subtraction() -> None:
@@ -23,8 +26,9 @@ def test_parse_subtraction() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(
-        expressions=[BinaryOp(left=Literal(2), op="-", right=Literal(1))])
+    assert ast == BlockExpression(location=L,
+                                  expressions=[BinaryOp(
+                                      location=L, left=Literal(location=L, value=2), op="-", right=Literal(location=L, value=1))])
 
 
 def test_parse_identifier_as_part_of_sum_function() -> None:
@@ -34,8 +38,11 @@ def test_parse_identifier_as_part_of_sum_function() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(
-        [BinaryOp(left=Identifier("a"), op="+", right=Literal(3))])
+    assert ast == BlockExpression(location=L, expressions=[
+        BinaryOp(location=L, left=Identifier(
+            location=L, name="a"), op="+", right=Literal(location=L, value=3))
+    ]
+    )
 
 
 def test_parse_identifier_as_part_of_sum_function_two_identifiers() -> None:
@@ -45,8 +52,8 @@ def test_parse_identifier_as_part_of_sum_function_two_identifiers() -> None:
         Token(loc=L, type=TokenType.IDENTIFIER, text="b"),
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(
-        [BinaryOp(left=Identifier("a"), op="+", right=Identifier("b"))])
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(location=L, left=Identifier(location=L, name="a"), op="+", right=Identifier(location=L, name="b"))
+                                                           ])
 
 
 def test_parse_multiplication() -> None:
@@ -56,8 +63,8 @@ def test_parse_multiplication() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(
-        expressions=[BinaryOp(left=Literal(2), op="*", right=Literal(3))])
+    assert ast == BlockExpression(location=L,
+                                  expressions=[BinaryOp(location=L, left=Literal(location=L, value=2), op="*", right=Literal(location=L, value=3))])
 
 
 def test_parse_multiple_operations() -> None:
@@ -69,8 +76,8 @@ def test_parse_multiple_operations() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(left=BinaryOp(left=Literal(
-        value=1), op='+', right=Literal(value=2)), op='-', right=Literal(value=3)
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(location=L, left=BinaryOp(location=L, left=Literal(
+        location=L, value=1), op='+', right=Literal(location=L, value=2)), op='-', right=Literal(location=L, value=3)
     )])
 
 
@@ -85,12 +92,15 @@ def test_parse_multiple_operations_2() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="4")
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(
+        location=L,
         left=BinaryOp(
+            location=L,
             left=BinaryOp(
-                left=Literal(1), op='+', right=Literal(2)),
-            op='-', right=Literal(3)),
-        op='+', right=Literal(value=4)
+                location=L,
+                left=Literal(location=L, value=1), op='+', right=Literal(location=L, value=2)),
+            op='-', right=Literal(location=L, value=3)),
+        op='+', right=Literal(location=L, value=4)
     )])
 
 
@@ -138,10 +148,9 @@ def test_sum_and_multiplication() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
     ast = parse(tokens)
-    assert ast is not None
-    assert ast == BlockExpression(expressions=[BinaryOp(
-        left=Literal(value=1), op='+', right=BinaryOp(
-            left=Literal(value=2), op='*', right=Literal(value=3))
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(
+        location=L, left=Literal(location=L, value=1), op='+', right=BinaryOp(
+            location=L, left=Literal(location=L, value=2), op='*', right=Literal(location=L, value=3))
     )])
 
 
@@ -154,12 +163,13 @@ def test_multiplication_and_sum() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
     ast = parse(tokens)
-    assert ast is not None
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         BinaryOp(
+            location=L,
             left=BinaryOp(
-                left=Literal(value=1), op='*', right=Literal(value=2)
-            ), op='+', right=Literal(value=3)
+                location=L,
+                left=Literal(location=L, value=1), op='*', right=Literal(location=L, value=2)
+            ), op='+', right=Literal(location=L, value=3)
         )
     ]
     )
@@ -176,15 +186,16 @@ def test_multiplication_sum_and_subtraction() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="4")
     ]
     ast = parse(tokens)
-    assert ast is not None
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         BinaryOp(
+            location=L,
             left=BinaryOp(
-                left=Literal(value=1), op='+', right=BinaryOp(
-                    left=Literal(value=2), op='*', right=Literal(3)
+                location=L,
+                left=Literal(location=L, value=1), op='+', right=BinaryOp(
+                    location=L, left=Literal(location=L, value=2), op='*', right=Literal(location=L, value=3)
                 )
             ),
-            op='-', right=Literal(value=4)
+            op='-', right=Literal(location=L, value=4)
         )])
 
 
@@ -199,12 +210,15 @@ def test_multiplication_sum_and_subtraction_2() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="4")
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         BinaryOp(
+            location=L,
             left=BinaryOp(
-                left=Literal(value=1), op='+', right=Literal(value=2)),
+                location=L,
+                left=Literal(location=L, value=1), op='+', right=Literal(location=L, value=2)),
             op='-', right=BinaryOp(
-                left=Literal(value=3), op='*', right=Literal(value=4)
+                location=L,
+                left=Literal(location=L, value=3), op='*', right=Literal(location=L, value=4)
             )
         )])
 
@@ -220,10 +234,13 @@ def test_division_sum_and_multiplication() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="4")
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(
-        left=Literal(value=1), op='+', right=BinaryOp(
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(
+        location=L,
+        left=Literal(location=L, value=1), op='+', right=BinaryOp(
+            location=L,
             left=BinaryOp(
-                left=Literal(value=2), op='/', right=Literal(value=3)), op='*', right=Literal(value=4)
+                location=L,
+                left=Literal(location=L, value=2), op='/', right=Literal(location=L, value=3)), op='*', right=Literal(location=L, value=4)
         )
     )])
 
@@ -239,9 +256,12 @@ def test_parentheses_sum_and_multiplication() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(left=BinaryOp(
-        left=Literal(value=1), op='+', right=Literal(2)), op='/', right=Literal(value=3)
-    )])
+    assert ast == BlockExpression(location=L, expressions=[
+        BinaryOp(location=L, left=BinaryOp(
+            location=L,
+            left=Literal(location=L, value=1), op='+',
+            right=Literal(location=L, value=2)), op='/', right=Literal(location=L, value=3)
+        )])
 
 
 def test_double_parentheses_sum_and_multiplication() -> None:
@@ -259,11 +279,16 @@ def test_double_parentheses_sum_and_multiplication() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="4"),
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         BinaryOp(
+            location=L,
             left=BinaryOp(
-                left=Literal(value=1), op='+', right=BinaryOp(
-                    left=Literal(value=2), op='-', right=Literal(value=3))), op='/', right=Literal(value=4)
+                location=L,
+                left=Literal(location=L, value=1), op='+', right=BinaryOp(
+                    location=L,
+                    left=Literal(location=L, value=2),
+                    op='-', right=Literal(location=L, value=3))), op='/',
+            right=Literal(location=L, value=4)
         )])
 
 
@@ -293,11 +318,14 @@ def test_parse_if_expression() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="2")
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
+            location=L,
             condition_branch=BinaryOp(
-                left=Identifier(name='a'), op='+', right=Literal(value=1)), then_branch=BinaryOp(
-                left=Identifier(name='b'), op='*', right=Literal(value=2)), else_branch=None
+                location=L,
+                left=Identifier(location=L, name='a'), op='+', right=Literal(location=L, value=1)), then_branch=BinaryOp(
+                location=L,
+                left=Identifier(location=L, name='b'), op='*', right=Literal(location=L, value=2)), else_branch=None
         )])
 
 
@@ -317,15 +345,22 @@ def test_parse_if_expression_with_else_branch() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        IfExpression(
-            condition_branch=BinaryOp(
-                left=Identifier(name='a'), op='+', right=Literal(value=1)),
-            then_branch=BinaryOp(
-                left=Identifier(name='b'), op='*', right=Literal(value=2)), else_branch=BinaryOp(
-                left=Identifier(name="c"), op="/", right=Literal(3)
+    assert ast == BlockExpression(
+        location=L,
+        expressions=[
+            IfExpression(
+                location=L,
+                condition_branch=BinaryOp(
+                    location=L,
+                    left=Identifier(location=L, name='a'), op='+', right=Literal(location=L, value=1)),
+                then_branch=BinaryOp(
+                    location=L,
+                    left=Identifier(location=L, name='b'), op='*', right=Literal(location=L, value=2)),
+                else_branch=BinaryOp(
+                    location=L, left=Identifier(location=L, name="c"), op="/", right=Literal(location=L, value=3)
+                )
             )
-        )])
+        ])
 
 
 def test_if_statement_as_part_of_expression() -> None:
@@ -340,10 +375,12 @@ def test_if_statement_as_part_of_expression() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(
-        left=Literal(value=1), op='+', right=IfExpression(
-            condition_branch=Literal(value=2),
-            then_branch=Literal(value=2), else_branch=Literal(value=3))
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(
+        location=L,
+        left=Literal(location=L, value=1), op='+', right=IfExpression(
+            location=L,
+            condition_branch=Literal(location=L, value=2),
+            then_branch=Literal(location=L, value=2), else_branch=Literal(location=L, value=3))
     )
     ])
 
@@ -351,15 +388,26 @@ def test_if_statement_as_part_of_expression() -> None:
 def test_nested_if_expressions() -> None:
     tokens = tokenize("if a then if b then b + 1 else c + 2")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        IfExpression(
-            condition_branch=Identifier(name='a'),
-            then_branch=IfExpression(
-                condition_branch=Identifier(name='b'),
-                then_branch=BinaryOp(left=Identifier(name='b'),
-                                     op='+', right=Literal(value=1)),
-                else_branch=BinaryOp(left=Identifier(name='c'), op='+', right=Literal(value=2))),
-            else_branch=None)
+    assert ast == BlockExpression(location=SourceLocation(file='dummy', row=1, column=0),
+                                  expressions=[
+        IfExpression(location=SourceLocation(file='dummy', row=1, column=0),
+                     condition_branch=Identifier(
+            location=SourceLocation(file='dummy', row=1, column=3), name='a'),
+            then_branch=IfExpression(location=SourceLocation(file='dummy', row=1, column=10),
+                                     condition_branch=Identifier(
+                location=SourceLocation(file='dummy', row=1, column=13), name='b'),
+            then_branch=BinaryOp(location=SourceLocation(file='dummy', row=1, column=20), left=Identifier(
+                location=SourceLocation(file='dummy', row=1, column=20), name='b'), op='+', right=Literal(
+                location=SourceLocation(file='dummy', row=1, column=24), value=1)),
+            else_branch=BinaryOp(
+                location=SourceLocation(
+                    file='dummy', row=1, column=31),
+                left=Identifier(location=SourceLocation(
+                    file='dummy', row=1, column=31), name='c'),
+                op='+',
+                right=Literal(location=SourceLocation(file='dummy', row=1, column=35), value=2))),
+            else_branch=None
+        )
     ])
 
 
@@ -367,9 +415,14 @@ def test_function_call() -> None:
     tokens = tokenize("f(a,b,c)")
     ast = parse(tokens)
 
-    assert ast == BlockExpression(expressions=[FunctionExpression(
+    assert ast == BlockExpression(location=SourceLocation(file='dummy', row=1, column=0), expressions=[FunctionExpression(
+        location=SourceLocation(file='dummy', row=1, column=0),
         function_name="f", args=[
-            Identifier(name="a"), Identifier(name="b"), Identifier(name="c")]
+            Identifier(location=SourceLocation(
+                file='dummy', row=1, column=2), name="a"),
+            Identifier(location=SourceLocation(
+                file='dummy', row=1, column=4), name="b"),
+            Identifier(location=SourceLocation(file='dummy', row=1, column=6), name="c")]
     )])
 
 
@@ -377,42 +430,73 @@ def test_function_call_with_binary_operation() -> None:
     tokens = tokenize("f(a,b+c)")
     ast = parse(tokens)
 
-    assert ast == BlockExpression(expressions=[FunctionExpression(
-        function_name="f", args=[
-            Identifier(name="a"), BinaryOp(
-                left=Identifier(name="b"), op='+', right=Identifier(name='c')
-            )
-        ]
-    )])
+    assert ast == BlockExpression(location=SourceLocation(file='dummy', row=1, column=0), expressions=[
+        FunctionExpression(
+            location=SourceLocation(file='dummy', row=1, column=0),
+            function_name="f", args=[
+                Identifier(location=SourceLocation(
+                    file='dummy', row=1, column=2), name="a"),
+                BinaryOp(
+                    location=SourceLocation(file='dummy', row=1, column=4),
+                    left=Identifier(location=SourceLocation(
+                        file='dummy', row=1, column=4), name="b"),
+                    op='+',
+                    right=Identifier(location=SourceLocation(
+                        file='dummy', row=1, column=6), name='c')
+                )
+            ]
+        )])
 
 
 def test_function_call_in_the_middle_of_other_expression() -> None:
     tokens = tokenize("a + b(x,y) * 2")
     ast = parse(tokens)
 
-    assert ast == BlockExpression(expressions=[BinaryOp(
-        left=Identifier(name='a'), op='+', right=BinaryOp(
-            left=FunctionExpression(
-                function_name='b', args=[Identifier(name='x'), Identifier(name='y')]), op='*', right=Literal(value=2)
+    assert ast == BlockExpression(location=SourceLocation(file='dummy', row=1, column=0),
+                                  expressions=[
+        BinaryOp(
+            location=SourceLocation(file='dummy', row=1, column=0),
+            left=Identifier(location=SourceLocation(
+                file='dummy', row=1, column=0), name='a'),
+            op='+',
+            right=BinaryOp(
+                location=SourceLocation(file='dummy', row=1, column=4),
+                left=FunctionExpression(
+                    location=SourceLocation(file='dummy', row=1, column=4),
+                    function_name='b',
+                    args=[
+                        Identifier(location=SourceLocation(
+                            file='dummy', row=1, column=6), name='x'),
+                        Identifier(location=SourceLocation(file='dummy', row=1, column=8), name='y')]),
+                op='*',
+                right=Literal(location=SourceLocation(
+                    file='dummy', row=1, column=13), value=2)
+            )
         )
-    )])
+    ])
 
 
 def test_remainder_operator() -> None:
     tokens = tokenize("a%b")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(left=Identifier(name="a"),
-                                                        op="%", right=Identifier(name="b"))
-                                               ])
+    assert ast == BlockExpression(
+        location=SourceLocation(file='dummy', row=1, column=0),
+        expressions=[BinaryOp(
+            location=SourceLocation(file='dummy', row=1, column=0),
+            left=Identifier(
+                location=SourceLocation(file='dummy', row=1, column=0), name="a"),
+            op="%",
+            right=Identifier(location=SourceLocation(file='dummy', row=1, column=2), name="b"))
+        ])
 
 
 def test_remainder_operator_precedence() -> None:
     tokens = tokenize("1+a%b")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(
-        left=Literal(1), op="+", right=BinaryOp(
-            left=Identifier(name="a"), op="%",
-            right=Identifier(name="b")
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(
+        location=L, left=Literal(location=L, value=1), op="+", right=BinaryOp(
+            location=L, left=Identifier(location=L, name="a"), op="%",
+            right=Identifier(location=L, name="b")
         )
     )])
 
@@ -420,10 +504,10 @@ def test_remainder_operator_precedence() -> None:
 def test_if_expressions_2() -> None:
     tokens = tokenize("if a==b then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[IfExpression(
-        condition_branch=BinaryOp(
-            left=Identifier(name='a'), op='==', right=Identifier('b')),
-        then_branch=Identifier(name="c"),
+    assert ast == BlockExpression(location=L, expressions=[IfExpression(
+        location=L, condition_branch=BinaryOp(
+            location=L, left=Identifier(location=L, name='a'), op='==', right=Identifier(location=L, name='b')),
+        then_branch=Identifier(location=L, name="c"),
         else_branch=None)
     ])
 
@@ -431,10 +515,10 @@ def test_if_expressions_2() -> None:
 def test_if_expressions_3() -> None:
     tokens = tokenize("if a<=b then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[IfExpression(
-        condition_branch=BinaryOp(
-            left=Identifier(name='a'), op='<=', right=Identifier('b')),
-        then_branch=Identifier(name="c"),
+    assert ast == BlockExpression(location=L, expressions=[IfExpression(
+        location=L, condition_branch=BinaryOp(
+            location=L, left=Identifier(location=L, name='a'), op='<=', right=Identifier(location=L, name='b')),
+        then_branch=Identifier(location=L, name="c"),
         else_branch=None)
     ])
 
@@ -442,10 +526,10 @@ def test_if_expressions_3() -> None:
 def test_if_expressions_4() -> None:
     tokens = tokenize("if a>=b then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[IfExpression(
-        condition_branch=BinaryOp(
-            left=Identifier(name='a'), op='>=', right=Identifier('b')),
-        then_branch=Identifier(name="c"),
+    assert ast == BlockExpression(location=L, expressions=[IfExpression(
+        location=L, condition_branch=BinaryOp(
+            location=L, left=Identifier(location=L, name='a'), op='>=', right=Identifier(location=L, name='b')),
+        then_branch=Identifier(location=L, name="c"),
         else_branch=None)
     ])
 
@@ -453,10 +537,11 @@ def test_if_expressions_4() -> None:
 def test_if_expressions_5() -> None:
     tokens = tokenize("if a!=b then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[IfExpression(
+    assert ast == BlockExpression(location=L, expressions=[IfExpression(
+        location=L,
         condition_branch=BinaryOp(
-            left=Identifier(name='a'), op='!=', right=Identifier('b')),
-        then_branch=Identifier(name="c"),
+            location=L, left=Identifier(location=L, name='a'), op='!=', right=Identifier(location=L, name='b')),
+        then_branch=Identifier(location=L, name="c"),
         else_branch=None)
     ])
 
@@ -464,10 +549,10 @@ def test_if_expressions_5() -> None:
 def test_if_expressions_6() -> None:
     tokens = tokenize("if a>b then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[IfExpression(
-        condition_branch=BinaryOp(
-            left=Identifier(name='a'), op='>', right=Identifier('b')),
-        then_branch=Identifier(name="c"),
+    assert ast == BlockExpression(location=L, expressions=[IfExpression(
+        location=L, condition_branch=BinaryOp(
+            location=L, left=Identifier(location=L, name='a'), op='>', right=Identifier(location=L, name='b')),
+        then_branch=Identifier(location=L, name="c"),
         else_branch=None)
     ])
 
@@ -475,38 +560,50 @@ def test_if_expressions_6() -> None:
 def test_and_expression() -> None:
     tokens = tokenize("if a>b and b == 2 then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
+            location=L,
             condition_branch=BinaryOp(
-                left=BinaryOp(left=Identifier(name='a'), op='>',
-                              right=Identifier(name='b')),
+                location=L, left=BinaryOp(location=L, left=Identifier(location=L, name='a'), op='>',
+                                          right=Identifier(location=L, name='b')),
                 op='and', right=BinaryOp(
-                    left=Identifier(name='b'), op='==', right=Literal(value=2))),
-            then_branch=Identifier(name='c'), else_branch=None)
+                    location=L, left=Identifier(location=L, name='b'), op='==', right=Literal(location=L, value=2))),
+            then_branch=Identifier(location=L, name='c'), else_branch=None)
     ])
 
 
 def test_and_or_expressions() -> None:
     tokens = tokenize("if a>b and b == 2 or b == 3 then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
-            condition_branch=BinaryOp(
-                left=BinaryOp(
-                    left=BinaryOp(
-                        left=Identifier(name='a'), op='>', right=Identifier(name='b')), op='and', right=BinaryOp(
-                        left=Identifier(name='b'), op='==', right=Literal(value=2))), op='or', right=BinaryOp(
-                    left=Identifier(name='b'), op='==', right=Literal(value=3))),
-            then_branch=Identifier(name='c'), else_branch=None
+            location=L, condition_branch=BinaryOp(
+                location=L, left=BinaryOp(
+                    location=L, left=BinaryOp(
+                        location=L, left=Identifier(location=L, name='a'),
+                        op='>',
+                        right=Identifier(location=L, name='b')),
+                    op='and',
+                    right=BinaryOp(
+                        location=L, left=Identifier(location=L, name='b'),
+                        op='==',
+                        right=Literal(location=L, value=2))),
+                op='or',
+                right=BinaryOp(
+                    location=L,
+                    left=Identifier(location=L, name='b'),
+                    op='==',
+                    right=Literal(location=L, value=3))),
+            then_branch=Identifier(location=L, name='c'), else_branch=None
         )])
 
 
 def test_assignment_operator() -> None:
     tokens = tokenize("a=b*5")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(
-        left=Identifier(name="a"), op="=", right=BinaryOp(
-            left=Identifier(name="b"), op="*", right=Literal(5)
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(
+        location=L, left=Identifier(location=L, name="a"), op="=", right=BinaryOp(
+            location=L, left=Identifier(location=L, name="b"), op="*", right=Literal(location=L, value=5)
         )
     )])
 
@@ -514,19 +611,23 @@ def test_assignment_operator() -> None:
 def test_chaining_of_not() -> None:
     tokens = tokenize("if not not (a==b) then a=b")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
+            location=L,
             condition_branch=UnaryExpression(
+                location=L,
                 operator="not", operand=UnaryExpression(
+                    location=L,
                     operator="not", operand=BinaryOp(
-                        left=Identifier(name="a"), op="==", right=Identifier(name="b")
+                        location=L, left=Identifier(location=L, name="a"), op="==", right=Identifier(location=L, name="b")
                     )
                 )
             ),
             then_branch=BinaryOp(
+                location=L,
                 left=Identifier(
-                    name="a"
-                ), op="=", right=Identifier(name="b")
+                    location=L, name="a"
+                ), op="=", right=Identifier(location=L, name="b")
             ),
             else_branch=None
         )])
@@ -536,20 +637,47 @@ def test_different_operand_levels_mixed() -> None:
     tokens = tokenize(
         "if a + b == 5 * 3 then c = f(a,b) else b = 5 / 8 + 3 - 5")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
-            condition_branch=BinaryOp(
+            location=L, condition_branch=BinaryOp(
+                location=L,
                 left=BinaryOp(
-                    left=Identifier(name='a'), op='+', right=Identifier(name='b')), op='==', right=BinaryOp(
-                    left=Literal(value=5), op='*', right=Literal(value=3))),
+                    location=L,
+                    left=Identifier(location=L, name='a'),
+                    op='+',
+                    right=Identifier(location=L, name='b')),
+                op='==',
+                right=BinaryOp(
+                    location=L,
+                    left=Literal(location=L, value=5),
+                    op='*',
+                    right=Literal(location=L, value=3))),
             then_branch=BinaryOp(
-                left=Identifier(name='c'), op='=', right=FunctionExpression(
-                    function_name='f', args=[Identifier(name='a'), Identifier(name='b')])),
+                location=L,
+                left=Identifier(location=L, name='c'),
+                op='=',
+                right=FunctionExpression(
+                    location=L, function_name='f', args=[
+                        Identifier(location=L, name='a'), Identifier(
+                            location=L, name='b')
+                    ])),
             else_branch=BinaryOp(
-                left=Identifier(name='b'), op='=', right=BinaryOp(
+                location=L,
+                left=Identifier(location=L, name='b'),
+                op='=',
+                right=BinaryOp(
+                    location=L,
                     left=BinaryOp(
-                        left=BinaryOp(left=Literal(value=5), op='/', right=Literal(value=8)), op='+', right=Literal(value=3)
-                    ), op='-', right=Literal(value=5)
+                        location=L, left=BinaryOp(
+                            location=L,
+                            left=Literal(location=L, value=5),
+                            op='/', right=Literal(
+                                location=L, value=8)),
+                        op='+',
+                        right=Literal(location=L, value=3)
+                    ),
+                    op='-',
+                    right=Literal(location=L, value=5)
                 )
             )
         )])
@@ -558,9 +686,9 @@ def test_different_operand_levels_mixed() -> None:
 def test_chained_assignment_is_parsed_correctly() -> None:
     tokens = tokenize("a = b = c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[BinaryOp(
-        left=Identifier(name="a"), op="=", right=BinaryOp(
-            left=Identifier(name="b"), op="=", right=Identifier(name="c")
+    assert ast == BlockExpression(location=L, expressions=[BinaryOp(
+        location=L, left=Identifier(location=L, name="a"), op="=", right=BinaryOp(
+            location=L, left=Identifier(location=L, name="b"), op="=", right=Identifier(location=L, name="c")
         )
     )])
 
@@ -568,19 +696,26 @@ def test_chained_assignment_is_parsed_correctly() -> None:
 def test_chaining_of_not_with_both_not_and_minus_sign() -> None:
     tokens = tokenize("if not  -(a==b) then a=b")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
+            location=L,
             condition_branch=UnaryExpression(
+                location=L,
                 operator="not", operand=UnaryExpression(
+                    location=L,
                     operator="-", operand=BinaryOp(
-                        left=Identifier(name="a"), op="==", right=Identifier(name="b")
+                        location=L,
+                        left=Identifier(location=L, name="a"),
+                        op="==",
+                        right=Identifier(location=L, name="b")
                     )
                 )
             ),
             then_branch=BinaryOp(
-                left=Identifier(
-                    name="a"
-                ), op="=", right=Identifier(name="b")
+                location=L,
+                left=Identifier(location=L, name="a"),
+                op="=",
+                right=Identifier(location=L, name="b")
             ),
             else_branch=None
         )])
@@ -589,36 +724,42 @@ def test_chaining_of_not_with_both_not_and_minus_sign() -> None:
 def test_simple_block() -> None:
     tokens = tokenize("{f(a);\nx = y;\nf(x)}")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        FunctionExpression(function_name="f", args=[Identifier(name="a")]),
-        BinaryOp(left=Identifier(name="x"), op="=",
-                 right=Identifier(name="y")),
-        FunctionExpression(function_name="f", args=[Identifier(name="x")])
-    ]
+    assert ast == BlockExpression(location=L, expressions=[
+        FunctionExpression(location=L, function_name="f", args=[
+                           Identifier(location=L, name="a")]),
+        BinaryOp(
+            location=L,
+            left=Identifier(location=L, name="x"),
+            op="=",
+            right=Identifier(location=L, name="y")),
+        FunctionExpression(location=L, function_name="f", args=[
+                           Identifier(location=L, name="x")])]
     )
 
 
 def test_simple_block_ends_with_semicolumn() -> None:
     tokens = tokenize("{f(a);\nx = y;\nf(x);}")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        FunctionExpression(function_name="f", args=[Identifier(name="a")]),
-        BinaryOp(left=Identifier(name="x"), op="=",
-                 right=Identifier(name="y")),
-        FunctionExpression(function_name="f", args=[Identifier(name="x")]),
-        Literal(value=None)
-    ]
+    assert ast == BlockExpression(location=L, expressions=[
+        FunctionExpression(location=L, function_name="f", args=[
+                           Identifier(location=L, name="a")]),
+        BinaryOp(location=L, left=Identifier(location=L, name="x"), op="=",
+                 right=Identifier(location=L, name="y")),
+        FunctionExpression(location=L, function_name="f", args=[
+                           Identifier(location=L, name="x")]),
+        Literal(location=L, value=None)]
     )
 
 
 def test_two_expressions() -> None:
     tokens = tokenize("f(a);\nx = y;")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        FunctionExpression(function_name="f", args=[Identifier(name="a")]),
-        BinaryOp(left=Identifier(name="x"), op="=",
-                 right=Identifier(name="y")),
-        Literal(value=None)
+    assert ast == BlockExpression(location=L, expressions=[
+        FunctionExpression(location=L, function_name="f", args=[
+                           Identifier(location=L, name="a")]),
+        BinaryOp(location=L, left=Identifier(location=L, name="x"), op="=",
+                 right=Identifier(location=L, name="y")),
+        Literal(location=L, value=None)
     ]
     )
 
@@ -626,18 +767,23 @@ def test_two_expressions() -> None:
 def test_expression_after_block() -> None:
     tokens = tokenize("{f(a);\nx = y;\nf(x)};\nif a==b then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        BlockExpression(expressions=[
-            FunctionExpression(function_name="f", args=[Identifier(name="a")]),
-            BinaryOp(left=Identifier(name="x"), op="=",
-                     right=Identifier(name="y")),
-            FunctionExpression(function_name="f", args=[Identifier(name="x")])
+    assert ast == BlockExpression(location=L, expressions=[
+        BlockExpression(location=L, expressions=[
+            FunctionExpression(location=L, function_name="f", args=[
+                               Identifier(location=L, name="a")]),
+            BinaryOp(location=L, left=Identifier(location=L, name="x"), op="=",
+                     right=Identifier(location=L, name="y")),
+            FunctionExpression(location=L, function_name="f", args=[
+                               Identifier(location=L, name="x")])
         ]
         ),
         IfExpression(
-            condition_branch=BinaryOp(
-                left=Identifier(name="a"), op="==", right=Identifier(name="b")
-            ), then_branch=Identifier(name="c"), else_branch=None)
+            location=L, condition_branch=BinaryOp(
+                location=L,
+                left=Identifier(location=L, name="a"),
+                op="==",
+                right=Identifier(location=L, name="b")),
+            then_branch=Identifier(location=L, name="c"), else_branch=None)
     ]
     )
 
@@ -645,15 +791,21 @@ def test_expression_after_block() -> None:
 def test_block_without_curly_braces() -> None:
     tokens = tokenize("f(a);\nx = y;\nf(x);\nif a==b then c")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        FunctionExpression(function_name="f", args=[Identifier(name="a")]),
-        BinaryOp(left=Identifier(name="x"), op="=",
-                 right=Identifier(name="y")),
-        FunctionExpression(function_name="f", args=[Identifier(name="x")]),
+    assert ast == BlockExpression(location=L, expressions=[
+        FunctionExpression(location=L, function_name="f", args=[
+                           Identifier(location=L, name="a")]),
+        BinaryOp(location=L, left=Identifier(location=L, name="x"), op="=",
+                 right=Identifier(location=L, name="y")),
+        FunctionExpression(location=L, function_name="f",
+                           args=[Identifier(location=L, name="x")]),
         IfExpression(
+            location=L,
             condition_branch=BinaryOp(
-                left=Identifier(name="a"), op="==", right=Identifier(name="b")
-            ), then_branch=Identifier(name="c"), else_branch=None)
+                location=L,
+                left=Identifier(location=L, name="a"),
+                op="==",
+                right=Identifier(location=L, name="b")),
+            then_branch=Identifier(location=L, name="c"), else_branch=None)
     ]
     )
 
@@ -661,16 +813,20 @@ def test_block_without_curly_braces() -> None:
 def test_block_without_curly_braces_ends_with_semicolumn() -> None:
     tokens = tokenize("f(a);\nx = y;\nf(x);\nif a==b then c;")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        FunctionExpression(function_name="f", args=[Identifier(name="a")]),
-        BinaryOp(left=Identifier(name="x"), op="=",
-                 right=Identifier(name="y")),
-        FunctionExpression(function_name="f", args=[Identifier(name="x")]),
+    assert ast == BlockExpression(location=L, expressions=[
+        FunctionExpression(location=L, function_name="f", args=[
+                           Identifier(location=L, name="a")]),
+        BinaryOp(location=L, left=Identifier(location=L, name="x"), op="=",
+                 right=Identifier(location=L, name="y")),
+        FunctionExpression(location=L, function_name="f", args=[
+                           Identifier(location=L, name="x")]),
         IfExpression(
+            location=L,
             condition_branch=BinaryOp(
-                left=Identifier(name="a"), op="==", right=Identifier(name="b")
-            ), then_branch=Identifier(name="c"), else_branch=None),
-        Literal(value=None)
+                location=L,
+                left=Identifier(location=L, name="a"), op="==", right=Identifier(location=L, name="b")
+            ), then_branch=Identifier(location=L, name="c"), else_branch=None),
+        Literal(location=L, value=None)
     ]
     )
 
@@ -687,29 +843,38 @@ def test_missing_semicolumn_in_last_expression_does_not_raise_error() -> None:
     tokens = tokenize("a = b; \n x = 1")
 
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        BinaryOp(left=Identifier(name="a"), op="=",
-                 right=Identifier(name="b")),
-        BinaryOp(left=Identifier(name="x"), op="=", right=Literal(1))
+    assert ast == BlockExpression(location=L, expressions=[
+        BinaryOp(location=L, left=Identifier(location=L, name="a"), op="=",
+                 right=Identifier(location=L, name="b")),
+        BinaryOp(location=L, left=Identifier(location=L, name="x"),
+                 op="=", right=Literal(location=L, value=1))
     ])
 
 
 def test_semicolumn_can_exist_after_curly_braces() -> None:
     tokens = tokenize("{a = b}; \n x = 1")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        BlockExpression(expressions=[BinaryOp(left=Identifier(
-            name="a"), op="=", right=Identifier(name="b"))]),
-        BinaryOp(left=Identifier(name="x"), op="=", right=Literal(1))
+    assert ast == BlockExpression(location=L, expressions=[
+        BlockExpression(location=L, expressions=[BinaryOp(
+            location=L,
+            left=Identifier(location=L, name="a"),
+            op="=",
+            right=Identifier(location=L, name="b"))]),
+        BinaryOp(
+            location=L,
+            left=Identifier(location=L, name="x"),
+            op="=", right=Literal(location=L, value=1))
     ])
 
 
 def test_block_1() -> None:
     tokens = tokenize("{ { a } { b } }")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        BlockExpression(expressions=[Identifier(name="a")]),
-        BlockExpression(expressions=[Identifier(name="b")])
+    assert ast == BlockExpression(location=L, expressions=[
+        BlockExpression(location=L, expressions=[
+                        Identifier(location=L, name="a")]),
+        BlockExpression(location=L, expressions=[
+                        Identifier(location=L, name="b")])
     ])
 
 
@@ -725,11 +890,16 @@ def test_block_3() -> None:
     tokens = tokenize("{ if true then { a } b }")
     ast = parse(tokens)
     assert ast == BlockExpression(
+        location=L,
         expressions=[
-            IfExpression(condition_branch=Identifier("true"), then_branch=BlockExpression(
-                expressions=[Identifier(name="a")]
-            ), else_branch=None),
-            Identifier(name="b")
+            IfExpression(
+                location=L,
+                condition_branch=Identifier(location=L, name="true"),
+                then_branch=BlockExpression(
+                    location=L,
+                    expressions=[Identifier(location=L, name="a")]
+                ), else_branch=None),
+            Identifier(location=L, name="b")
         ]
     )
 
@@ -753,12 +923,14 @@ def test_block_does_not_end_with_curly_braces_when_block_is_in_the_middle_of_the
 def test_block_4() -> None:
     tokens = tokenize("{ if true then { a }; b }")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
-            condition_branch=Identifier("true"),
-            then_branch=BlockExpression(expressions=[Identifier("a")]),
+            location=L,
+            condition_branch=Identifier(location=L, name="true"),
+            then_branch=BlockExpression(
+                location=L, expressions=[Identifier(location=L, name="a")]),
             else_branch=None),
-        Identifier(name="b")
+        Identifier(location=L, name="b")
     ])
 
 
@@ -773,25 +945,29 @@ def test_block_5() -> None:
 def test_block_6() -> None:
     tokens = tokenize("{ if true then { a } b; c }")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
-            condition_branch=Identifier("true"),
-            then_branch=BlockExpression(expressions=[Identifier("a")]),
+            location=L,
+            condition_branch=Identifier(location=L, name="true"),
+            then_branch=BlockExpression(location=L, expressions=[
+                                        Identifier(location=L, name="a")]),
             else_branch=None),
-        Identifier(name="b"),
-        Identifier(name="c")
+        Identifier(location=L, name="b"),
+        Identifier(location=L, name="c")
     ])
 
 
 def test_block_7() -> None:
     tokens = tokenize("{ if true then { a } else { b } 3 }")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
+    assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
-            condition_branch=Identifier("true"),
-            then_branch=BlockExpression(expressions=[Identifier("a")]),
-            else_branch=BlockExpression(expressions=[Identifier(name="b")])),
-        Literal(3)
+            location=L,
+            condition_branch=Identifier(location=L, name="true"),
+            then_branch=BlockExpression(location=L, expressions=[
+                                        Identifier(location=L, name="a")]),
+            else_branch=BlockExpression(location=L, expressions=[Identifier(location=L, name="b")])),
+        Literal(location=L, value=3)
     ])
 
 
@@ -799,30 +975,40 @@ def test_block_8() -> None:
     tokens = tokenize("x = { { f(a) } { b } }")
     ast = parse(tokens)
     assert ast == BlockExpression(
-        expressions=[BinaryOp(left=Identifier(name="x"), op="=", right=BlockExpression(
-            expressions=[
-                BlockExpression(expressions=[FunctionExpression(
-                    function_name="f", args=[Identifier(name="a")])]),
-                BlockExpression(expressions=[Identifier(name="b")])
-            ]
-        )
+        location=L,
+        expressions=[BinaryOp(
+            location=L,
+            left=Identifier(location=L, name="x"),
+            op="=",
+            right=BlockExpression(
+                location=L,
+                expressions=[
+                    BlockExpression(location=L,
+                                    expressions=[FunctionExpression(
+                                        location=L,
+                                        function_name="f", args=[Identifier(location=L, name="a")])]),
+                    BlockExpression(location=L, expressions=[
+                        Identifier(location=L, name="b")])
+                ]
+            )
         )])
 
 
 def test_simple_variable_declaration() -> None:
     tokens = tokenize("var x = 1")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        VariableDeclaration(variable_name="x", initializer=Literal(1))
+    assert ast == BlockExpression(location=L, expressions=[
+        VariableDeclaration(location=L, variable_name="x",
+                            initializer=Literal(location=L, value=1))
     ])
 
 
 def test_variable_declaration() -> None:
     tokens = tokenize("var x = f(a)")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        VariableDeclaration(variable_name="x", initializer=FunctionExpression(
-            function_name="f", args=[Identifier(name="a")]))
+    assert ast == BlockExpression(location=L, expressions=[
+        VariableDeclaration(location=L, variable_name="x", initializer=FunctionExpression(
+            location=L, function_name="f", args=[Identifier(location=L, name="a")]))
     ])
 
 
@@ -837,6 +1023,7 @@ def test_dont_allow_variable_declaration_inside_if_statement() -> None:
 def test_simple_variable_declaration_inside_block() -> None:
     tokens = tokenize("{var x = 1}")
     ast = parse(tokens)
-    assert ast == BlockExpression(expressions=[
-        VariableDeclaration(variable_name="x", initializer=Literal(1))
+    assert ast == BlockExpression(location=L, expressions=[
+        VariableDeclaration(location=SourceLocation("dummy", row=1, column=1), variable_name="x",
+                            initializer=Literal(location=L, value=1))
     ])
