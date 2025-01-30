@@ -113,14 +113,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         expressions: list[ast.Expression] = []
         while True:
             if peek().text == "var":
-                consume("var")
-                if peek().type != TokenType.IDENTIFIER:
-                    raise Exception(f'{peek().loc}: expected an identifier')
-                variable_name = consume().text
-                consume("=")
-                initializer = parse_binary_operator_level(0)
-                expression = ast.VariableDeclaration(
-                    variable_name=variable_name, initializer=initializer)
+                expression = parse_variable_declaration()
             else:
                 expression = parse_binary_operator_level(0)
             expressions.append(expression)
@@ -216,54 +209,47 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         raise Exception(
             f"Unsupported operator type at precedence level {level}")
 
-    return parse_binary_operator_level(0), pos
+    def parse_variable_declaration() -> ast.Expression:
+        consume("var")
+        if peek().type != TokenType.IDENTIFIER:
+            raise Exception(f'{tokens[pos].loc}: expected an identifier')
+        variable_name = consume().text
 
+        consume("=")
+        initializer = parse_binary_operator_level(0)
+        return ast.VariableDeclaration(variable_name=variable_name, initializer=initializer)
 
-def parse_variable_declaration(tokens, pos) -> ast.Expression:
-    if tokens[pos].type != TokenType.IDENTIFIER:
-        raise Exception(f'{tokens[pos].loc}: expected an identifier')
-    variable_name = tokens[pos].text
-    pos += 1
-    if tokens[pos].text != "=":
-        raise ("Expected =")
-    pos += 1
-    initializer, new_pos = parse(tokens, pos)
-    return ast.VariableDeclaration(variable_name=variable_name, initializer=initializer), new_pos
-
-
-def parse_expressions(tokens: list[Token]) -> ast.Expression | None:
-    ends_with_semicolon = False
-    expressions = []
-    pos = 0
-    if not tokens:
-        return None
-    while (pos < len(tokens)):
-        if tokens[pos].text == "var":
-            pos += 1
-            expression, new_pos = parse_variable_declaration(
-                tokens, pos)
-
-        else:
-            expression, new_pos = parse(tokens, pos)
+    def parse_expressions() -> ast.Expression | None:
         ends_with_semicolon = False
+        expressions = []
+        if not tokens:
+            return None
+        while (pos < len(tokens)):
+            if peek().text == "var":
+                expression = parse_variable_declaration()
+            else:
+                expression = parse_binary_operator_level(0)
+            ends_with_semicolon = False
 
-        _validate_that_expression_ends_with_semicolumn_if_needed(
-            tokens, new_pos, expression
-        )
+            _validate_that_expression_ends_with_semicolumn_if_needed(
+                tokens, pos, expression
+            )
 
-        if len(tokens) > new_pos and tokens[new_pos].text == ';':
-            ends_with_semicolon = True
+            if peek().text == ';':
+                ends_with_semicolon = True
+                consume(';')
 
-        pos = new_pos + 1
-        expressions.append(expression)
+            expressions.append(expression)
 
-    if len(expressions) == 1 and isinstance(expressions[0], ast.BlockExpression):
-        return expressions[0]
+        if len(expressions) == 1 and isinstance(expressions[0], ast.BlockExpression):
+            return expressions[0]
 
-    if _should_append_unit_in_the_end(expressions, ends_with_semicolon):
-        expressions.append(ast.Literal(value=None))
+        if _should_append_unit_in_the_end(expressions, ends_with_semicolon):
+            expressions.append(ast.Literal(value=None))
 
-    return ast.BlockExpression(expressions=expressions)
+        return ast.BlockExpression(expressions=expressions)
+
+    return parse_expressions()
 
 
 def _validate_that_expression_ends_with_semicolumn_if_needed(tokens, new_position, latest_expression):

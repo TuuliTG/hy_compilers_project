@@ -1,6 +1,6 @@
 from compiler.domain import Token, SourceLocation, L, TokenType
 from compiler.ast import BinaryOp, BlockExpression, Expression, FunctionExpression, IfExpression, Literal, Identifier, UnaryExpression, VariableDeclaration
-from compiler.parser import parse, parse_expressions
+from compiler.parser import parse, parse
 import pytest
 from compiler.tokenizer import tokenize
 
@@ -11,7 +11,7 @@ def test_parse_sum() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="+"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="2"),
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(
         expressions=[BinaryOp(left=Literal(1), op="+", right=Literal(2))])
 
@@ -22,7 +22,7 @@ def test_parse_subtraction() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="-"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="1"),
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(
         expressions=[BinaryOp(left=Literal(2), op="-", right=Literal(1))])
 
@@ -33,7 +33,7 @@ def test_parse_identifier_as_part_of_sum_function() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="+"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(
         [BinaryOp(left=Identifier("a"), op="+", right=Literal(3))])
 
@@ -44,7 +44,7 @@ def test_parse_identifier_as_part_of_sum_function_two_identifiers() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="+"),
         Token(loc=L, type=TokenType.IDENTIFIER, text="b"),
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(
         [BinaryOp(left=Identifier("a"), op="+", right=Identifier("b"))])
 
@@ -55,7 +55,7 @@ def test_parse_multiplication() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="*"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(
         expressions=[BinaryOp(left=Literal(2), op="*", right=Literal(3))])
 
@@ -68,7 +68,7 @@ def test_parse_multiple_operations() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="-"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(left=BinaryOp(left=Literal(
         value=1), op='+', right=Literal(value=2)), op='-', right=Literal(value=3)
     )])
@@ -84,7 +84,7 @@ def test_parse_multiple_operations_2() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="+"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="4")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(
         left=BinaryOp(
             left=BinaryOp(
@@ -96,7 +96,7 @@ def test_parse_multiple_operations_2() -> None:
 
 def test_empty_tokens_fails_gracefully() -> None:
     tokens: list[Token] = []
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == None
 
 
@@ -110,7 +110,7 @@ def test_calculation_ends_with_plus_sign_throws_an_error() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="+")
     ]
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "an integer literal or an identifier" in str(
         e.value)
 
@@ -125,7 +125,7 @@ def test_calculation_starts_with_plus_sign_throws_an_error() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "an integer literal or an identifier" in str(e.value)
 
 
@@ -137,7 +137,7 @@ def test_sum_and_multiplication() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="*"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast is not None
     assert ast == BlockExpression(expressions=[BinaryOp(
         left=Literal(value=1), op='+', right=BinaryOp(
@@ -153,7 +153,7 @@ def test_multiplication_and_sum() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="+"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast is not None
     assert ast == BlockExpression(expressions=[
         BinaryOp(
@@ -175,7 +175,7 @@ def test_multiplication_sum_and_subtraction() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="-"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="4")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast is not None
     assert ast == BlockExpression(expressions=[
         BinaryOp(
@@ -198,7 +198,7 @@ def test_multiplication_sum_and_subtraction_2() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="*"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="4")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         BinaryOp(
             left=BinaryOp(
@@ -219,7 +219,7 @@ def test_division_sum_and_multiplication() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="*"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="4")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(
         left=Literal(value=1), op='+', right=BinaryOp(
             left=BinaryOp(
@@ -238,7 +238,7 @@ def test_parentheses_sum_and_multiplication() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="/"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(left=BinaryOp(
         left=Literal(value=1), op='+', right=Literal(2)), op='/', right=Literal(value=3)
     )])
@@ -258,7 +258,7 @@ def test_double_parentheses_sum_and_multiplication() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="/"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="4"),
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         BinaryOp(
             left=BinaryOp(
@@ -277,7 +277,7 @@ def test_missing_parentheses_throws_an_error() -> None:
         Token(loc=L, type=TokenType.INT_LITERAL, text="3"),
     ]
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "expected \")\"" in str(e.value)
 
 
@@ -292,7 +292,7 @@ def test_parse_if_expression() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="*"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="2")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=BinaryOp(
@@ -316,7 +316,7 @@ def test_parse_if_expression_with_else_branch() -> None:
         Token(loc=L, type=TokenType.OPERATOR, text="/"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=BinaryOp(
@@ -339,7 +339,7 @@ def test_if_statement_as_part_of_expression() -> None:
         Token(loc=L, type=TokenType.IDENTIFIER, text="else"),
         Token(loc=L, type=TokenType.INT_LITERAL, text="3")
     ]
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(
         left=Literal(value=1), op='+', right=IfExpression(
             condition_branch=Literal(value=2),
@@ -350,7 +350,7 @@ def test_if_statement_as_part_of_expression() -> None:
 
 def test_nested_if_expressions() -> None:
     tokens = tokenize("if a then if b then b + 1 else c + 2")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=Identifier(name='a'),
@@ -365,7 +365,7 @@ def test_nested_if_expressions() -> None:
 
 def test_function_call() -> None:
     tokens = tokenize("f(a,b,c)")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
 
     assert ast == BlockExpression(expressions=[FunctionExpression(
         function_name="f", args=[
@@ -375,7 +375,7 @@ def test_function_call() -> None:
 
 def test_function_call_with_binary_operation() -> None:
     tokens = tokenize("f(a,b+c)")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
 
     assert ast == BlockExpression(expressions=[FunctionExpression(
         function_name="f", args=[
@@ -388,7 +388,7 @@ def test_function_call_with_binary_operation() -> None:
 
 def test_function_call_in_the_middle_of_other_expression() -> None:
     tokens = tokenize("a + b(x,y) * 2")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
 
     assert ast == BlockExpression(expressions=[BinaryOp(
         left=Identifier(name='a'), op='+', right=BinaryOp(
@@ -400,7 +400,7 @@ def test_function_call_in_the_middle_of_other_expression() -> None:
 
 def test_remainder_operator() -> None:
     tokens = tokenize("a%b")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(left=Identifier(name="a"),
                                                         op="%", right=Identifier(name="b"))
                                                ])
@@ -408,7 +408,7 @@ def test_remainder_operator() -> None:
 
 def test_remainder_operator_precedence() -> None:
     tokens = tokenize("1+a%b")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(
         left=Literal(1), op="+", right=BinaryOp(
             left=Identifier(name="a"), op="%",
@@ -419,7 +419,7 @@ def test_remainder_operator_precedence() -> None:
 
 def test_if_expressions_2() -> None:
     tokens = tokenize("if a==b then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[IfExpression(
         condition_branch=BinaryOp(
             left=Identifier(name='a'), op='==', right=Identifier('b')),
@@ -430,7 +430,7 @@ def test_if_expressions_2() -> None:
 
 def test_if_expressions_3() -> None:
     tokens = tokenize("if a<=b then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[IfExpression(
         condition_branch=BinaryOp(
             left=Identifier(name='a'), op='<=', right=Identifier('b')),
@@ -441,7 +441,7 @@ def test_if_expressions_3() -> None:
 
 def test_if_expressions_4() -> None:
     tokens = tokenize("if a>=b then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[IfExpression(
         condition_branch=BinaryOp(
             left=Identifier(name='a'), op='>=', right=Identifier('b')),
@@ -452,7 +452,7 @@ def test_if_expressions_4() -> None:
 
 def test_if_expressions_5() -> None:
     tokens = tokenize("if a!=b then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[IfExpression(
         condition_branch=BinaryOp(
             left=Identifier(name='a'), op='!=', right=Identifier('b')),
@@ -463,7 +463,7 @@ def test_if_expressions_5() -> None:
 
 def test_if_expressions_6() -> None:
     tokens = tokenize("if a>b then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[IfExpression(
         condition_branch=BinaryOp(
             left=Identifier(name='a'), op='>', right=Identifier('b')),
@@ -474,7 +474,7 @@ def test_if_expressions_6() -> None:
 
 def test_and_expression() -> None:
     tokens = tokenize("if a>b and b == 2 then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=BinaryOp(
@@ -488,7 +488,7 @@ def test_and_expression() -> None:
 
 def test_and_or_expressions() -> None:
     tokens = tokenize("if a>b and b == 2 or b == 3 then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=BinaryOp(
@@ -503,7 +503,7 @@ def test_and_or_expressions() -> None:
 
 def test_assignment_operator() -> None:
     tokens = tokenize("a=b*5")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(
         left=Identifier(name="a"), op="=", right=BinaryOp(
             left=Identifier(name="b"), op="*", right=Literal(5)
@@ -513,7 +513,7 @@ def test_assignment_operator() -> None:
 
 def test_chaining_of_not() -> None:
     tokens = tokenize("if not not (a==b) then a=b")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=UnaryExpression(
@@ -535,7 +535,7 @@ def test_chaining_of_not() -> None:
 def test_different_operand_levels_mixed() -> None:
     tokens = tokenize(
         "if a + b == 5 * 3 then c = f(a,b) else b = 5 / 8 + 3 - 5")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=BinaryOp(
@@ -557,7 +557,7 @@ def test_different_operand_levels_mixed() -> None:
 
 def test_chained_assignment_is_parsed_correctly() -> None:
     tokens = tokenize("a = b = c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[BinaryOp(
         left=Identifier(name="a"), op="=", right=BinaryOp(
             left=Identifier(name="b"), op="=", right=Identifier(name="c")
@@ -567,7 +567,7 @@ def test_chained_assignment_is_parsed_correctly() -> None:
 
 def test_chaining_of_not_with_both_not_and_minus_sign() -> None:
     tokens = tokenize("if not  -(a==b) then a=b")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=UnaryExpression(
@@ -588,7 +588,7 @@ def test_chaining_of_not_with_both_not_and_minus_sign() -> None:
 
 def test_simple_block() -> None:
     tokens = tokenize("{f(a);\nx = y;\nf(x)}")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         FunctionExpression(function_name="f", args=[Identifier(name="a")]),
         BinaryOp(left=Identifier(name="x"), op="=",
@@ -600,7 +600,7 @@ def test_simple_block() -> None:
 
 def test_simple_block_ends_with_semicolumn() -> None:
     tokens = tokenize("{f(a);\nx = y;\nf(x);}")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         FunctionExpression(function_name="f", args=[Identifier(name="a")]),
         BinaryOp(left=Identifier(name="x"), op="=",
@@ -613,7 +613,7 @@ def test_simple_block_ends_with_semicolumn() -> None:
 
 def test_two_expressions() -> None:
     tokens = tokenize("f(a);\nx = y;")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         FunctionExpression(function_name="f", args=[Identifier(name="a")]),
         BinaryOp(left=Identifier(name="x"), op="=",
@@ -625,7 +625,7 @@ def test_two_expressions() -> None:
 
 def test_expression_after_block() -> None:
     tokens = tokenize("{f(a);\nx = y;\nf(x)};\nif a==b then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         BlockExpression(expressions=[
             FunctionExpression(function_name="f", args=[Identifier(name="a")]),
@@ -644,7 +644,7 @@ def test_expression_after_block() -> None:
 
 def test_block_without_curly_braces() -> None:
     tokens = tokenize("f(a);\nx = y;\nf(x);\nif a==b then c")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         FunctionExpression(function_name="f", args=[Identifier(name="a")]),
         BinaryOp(left=Identifier(name="x"), op="=",
@@ -660,7 +660,7 @@ def test_block_without_curly_braces() -> None:
 
 def test_block_without_curly_braces_ends_with_semicolumn() -> None:
     tokens = tokenize("f(a);\nx = y;\nf(x);\nif a==b then c;")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         FunctionExpression(function_name="f", args=[Identifier(name="a")]),
         BinaryOp(left=Identifier(name="x"), op="=",
@@ -678,7 +678,7 @@ def test_block_without_curly_braces_ends_with_semicolumn() -> None:
 def test_missing_semicolumn_raises_error() -> None:
     tokens = tokenize("a = b \n x = 1")
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "Expected ';', but found 'b'" in str(
         e.value)
 
@@ -686,7 +686,7 @@ def test_missing_semicolumn_raises_error() -> None:
 def test_missing_semicolumn_in_last_expression_does_not_raise_error() -> None:
     tokens = tokenize("a = b; \n x = 1")
 
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         BinaryOp(left=Identifier(name="a"), op="=",
                  right=Identifier(name="b")),
@@ -696,7 +696,7 @@ def test_missing_semicolumn_in_last_expression_does_not_raise_error() -> None:
 
 def test_semicolumn_can_exist_after_curly_braces() -> None:
     tokens = tokenize("{a = b}; \n x = 1")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         BlockExpression(expressions=[BinaryOp(left=Identifier(
             name="a"), op="=", right=Identifier(name="b"))]),
@@ -706,7 +706,7 @@ def test_semicolumn_can_exist_after_curly_braces() -> None:
 
 def test_block_1() -> None:
     tokens = tokenize("{ { a } { b } }")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         BlockExpression(expressions=[Identifier(name="a")]),
         BlockExpression(expressions=[Identifier(name="b")])
@@ -716,14 +716,14 @@ def test_block_1() -> None:
 def test_block_2() -> None:
     tokens = tokenize("{ a b }")
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "Expected ';', but found 'b'" in str(
         e.value)
 
 
 def test_block_3() -> None:
     tokens = tokenize("{ if true then { a } b }")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(
         expressions=[
             IfExpression(condition_branch=Identifier("true"), then_branch=BlockExpression(
@@ -737,7 +737,7 @@ def test_block_3() -> None:
 def test_block_does_not_end_with_curly_braces() -> None:
     tokens = tokenize("{ a; b ")
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "Expected }" in str(
         e.value)
 
@@ -745,14 +745,14 @@ def test_block_does_not_end_with_curly_braces() -> None:
 def test_block_does_not_end_with_curly_braces_when_block_is_in_the_middle_of_the_code() -> None:
     tokens = tokenize("x = 1; { a; b; {y = 2} f(a);")
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "Expected }" in str(
         e.value)
 
 
 def test_block_4() -> None:
     tokens = tokenize("{ if true then { a }; b }")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=Identifier("true"),
@@ -765,14 +765,14 @@ def test_block_4() -> None:
 def test_block_5() -> None:
     tokens = tokenize("{ if true then { a } b c }")
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "Expected ';'" in str(
         e.value)
 
 
 def test_block_6() -> None:
     tokens = tokenize("{ if true then { a } b; c }")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=Identifier("true"),
@@ -785,7 +785,7 @@ def test_block_6() -> None:
 
 def test_block_7() -> None:
     tokens = tokenize("{ if true then { a } else { b } 3 }")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         IfExpression(
             condition_branch=Identifier("true"),
@@ -797,7 +797,7 @@ def test_block_7() -> None:
 
 def test_block_8() -> None:
     tokens = tokenize("x = { { f(a) } { b } }")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(
         expressions=[BinaryOp(left=Identifier(name="x"), op="=", right=BlockExpression(
             expressions=[
@@ -811,7 +811,7 @@ def test_block_8() -> None:
 
 def test_simple_variable_declaration() -> None:
     tokens = tokenize("var x = 1")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         VariableDeclaration(variable_name="x", initializer=Literal(1))
     ])
@@ -819,7 +819,7 @@ def test_simple_variable_declaration() -> None:
 
 def test_variable_declaration() -> None:
     tokens = tokenize("var x = f(a)")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         VariableDeclaration(variable_name="x", initializer=FunctionExpression(
             function_name="f", args=[Identifier(name="a")]))
@@ -829,14 +829,14 @@ def test_variable_declaration() -> None:
 def test_dont_allow_variable_declaration_inside_if_statement() -> None:
     tokens = tokenize("if a == 2 then var x = 1")
     with pytest.raises(Exception) as e:
-        parse_expressions(tokens)
+        parse(tokens)
     assert "Variable declaration is only allowed in top level" in str(
         e.value)
 
 
 def test_simple_variable_declaration_inside_block() -> None:
     tokens = tokenize("{var x = 1}")
-    ast = parse_expressions(tokens)
+    ast = parse(tokens)
     assert ast == BlockExpression(expressions=[
         VariableDeclaration(variable_name="x", initializer=Literal(1))
     ])
