@@ -186,7 +186,8 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
     def parse_unary_operation(level, current_level_tokens) -> ast.Expression:
         if peek().text in current_level_tokens:
             operator_token = consume()
-            operator = operator_token.text
+            operator = ast.Operator(
+                location=operator_token.loc, token=operator_token.text)
             operand = parse_binary_operator_level(0)
             return ast.UnaryExpression(location=operator_token.loc, operator=operator, operand=operand)
         else:
@@ -196,7 +197,8 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         left = parse_binary_operator_level(level + 1)
         if peek().text in current_level_tokens:
             operator_token = consume()
-            operator = operator_token.text
+            operator = ast.Operator(
+                location=operator_token.loc, token=operator_token.text)
             right = parse_binary_operator_level(
                 level)
             return ast.BinaryOp(location=left.location, left=left, op=operator, right=right)
@@ -206,7 +208,8 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         left = parse_binary_operator_level(level + 1)
         while peek().text in current_level_tokens:
             operator_token = consume()
-            operator = operator_token.text
+            operator = ast.Operator(
+                location=operator_token.loc, token=operator_token.text)
             right = parse_binary_operator_level(level + 1)
             left = ast.BinaryOp(
                 location=left.location,

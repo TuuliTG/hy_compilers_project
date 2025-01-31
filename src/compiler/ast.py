@@ -32,6 +32,11 @@ class Identifier(Expression):
 
 
 @dataclass
+class Operator(Expression):
+    token: str
+
+
+@dataclass
 class IfExpression(Expression):
     condition_branch: Expression
     then_branch: Expression
@@ -46,7 +51,7 @@ class FunctionExpression(Expression):
 
 @dataclass
 class UnaryExpression(Expression):
-    operator: str
+    operator: Operator
     operand: Expression
 
 
@@ -54,7 +59,7 @@ class UnaryExpression(Expression):
 class BinaryOp(Expression):
     """AST node for a binary operation like `A + B`"""
     left: Expression
-    op: str
+    op: Operator
     right: Expression
 
 
