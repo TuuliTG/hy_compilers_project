@@ -74,6 +74,14 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         elif peek().text == 'var':
             raise Exception(
                 f"Variable declaration is only allowed in top level: {peek().loc}")
+        elif peek().text == 'true':
+            token = consume()
+            return ast.BooleanLiteral(token.loc, True)
+        elif peek().text == 'false':
+            token = consume()
+            return ast.BooleanLiteral(token.loc, False)
+        elif peek().text == 'while':
+            return parse_while_loop()
         else:
             token = consume()
             if peek().text == '(':
@@ -108,8 +116,15 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
         consume(')')
         return expr
 
+    def parse_while_loop() -> ast.Expression:
+        token = consume('while')
+        while_condition = parse_binary_operator_level(0)
+        consume('do')
+        do_expression = parse_binary_operator_level(0)
+        return ast.WhileLoop(location=token.loc, while_condition=while_condition, do_expression=do_expression)
+
     def parse_block() -> ast.Expression:
-        consume('{')
+        token = consume('{')
         expressions: list[ast.Expression] = []
         while True:
             if peek().text == "var":
@@ -135,7 +150,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression, int]:
                 if ends_with_semicolon:
                     expressions.append(ast.Literal(
                         location=expressions[0].location, value=None))
-                return ast.BlockExpression(expressions[0].location,
+                return ast.BlockExpression(token.loc,
                                            expressions=expressions
                                            )
 

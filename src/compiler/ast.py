@@ -16,6 +16,17 @@ class Literal(Expression):
 
 
 @dataclass
+class BooleanLiteral(Expression):
+    value: bool
+
+
+@dataclass
+class WhileLoop(Expression):
+    while_condition: Expression
+    do_expression: Expression
+
+
+@dataclass
 class Identifier(Expression):
     name: str
 

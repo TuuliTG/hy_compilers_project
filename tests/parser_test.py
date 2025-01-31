@@ -1,5 +1,5 @@
 from compiler.domain import Token, SourceLocation, L, TokenType
-from compiler.ast import BinaryOp, BlockExpression, Expression, FunctionExpression, IfExpression, Literal, Identifier, UnaryExpression, VariableDeclaration
+from compiler.ast import BinaryOp, BlockExpression, BooleanLiteral, Expression, FunctionExpression, IfExpression, Literal, Identifier, UnaryExpression, VariableDeclaration, WhileLoop
 from compiler.parser import parse, parse
 import pytest
 from compiler.tokenizer import tokenize
@@ -894,7 +894,7 @@ def test_block_3() -> None:
         expressions=[
             IfExpression(
                 location=L,
-                condition_branch=Identifier(location=L, name="true"),
+                condition_branch=BooleanLiteral(location=L, value=True),
                 then_branch=BlockExpression(
                     location=L,
                     expressions=[Identifier(location=L, name="a")]
@@ -926,7 +926,7 @@ def test_block_4() -> None:
     assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
             location=L,
-            condition_branch=Identifier(location=L, name="true"),
+            condition_branch=BooleanLiteral(location=L, value=True),
             then_branch=BlockExpression(
                 location=L, expressions=[Identifier(location=L, name="a")]),
             else_branch=None),
@@ -943,12 +943,12 @@ def test_block_5() -> None:
 
 
 def test_block_6() -> None:
-    tokens = tokenize("{ if true then { a } b; c }")
+    tokens = tokenize("{ if false then { a } b; c }")
     ast = parse(tokens)
     assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
             location=L,
-            condition_branch=Identifier(location=L, name="true"),
+            condition_branch=BooleanLiteral(location=L, value=False),
             then_branch=BlockExpression(location=L, expressions=[
                                         Identifier(location=L, name="a")]),
             else_branch=None),
@@ -963,7 +963,7 @@ def test_block_7() -> None:
     assert ast == BlockExpression(location=L, expressions=[
         IfExpression(
             location=L,
-            condition_branch=Identifier(location=L, name="true"),
+            condition_branch=BooleanLiteral(location=L, value=True),
             then_branch=BlockExpression(location=L, expressions=[
                                         Identifier(location=L, name="a")]),
             else_branch=BlockExpression(location=L, expressions=[Identifier(location=L, name="b")])),
@@ -1027,3 +1027,80 @@ def test_simple_variable_declaration_inside_block() -> None:
         VariableDeclaration(location=SourceLocation("dummy", row=1, column=1), variable_name="x",
                             initializer=Literal(location=L, value=1))
     ])
+
+
+def test_if_block_with_boolean_check() -> None:
+    tokens = tokenize("{ if a==b == false then x = x + 2 else x = x + 3 }")
+    ast = parse(tokens)
+    assert ast == BlockExpression(
+        location=SourceLocation(file='dummy', row=1, column=0),
+        expressions=[
+            IfExpression(
+                location=SourceLocation(file='dummy', row=1, column=2),
+                condition_branch=BinaryOp(
+                    location=SourceLocation(file='dummy', row=1, column=5),
+                    left=BinaryOp(
+                        location=SourceLocation(file='dummy', row=1, column=5),
+                        left=Identifier(location=SourceLocation(
+                            file='dummy', row=1, column=5), name='a'),
+                        op='==',
+                        right=Identifier(location=SourceLocation(file='dummy', row=1, column=8), name='b')),
+                    op='==',
+                    right=BooleanLiteral(location=SourceLocation(file='dummy', row=1, column=13), value=False)),
+                then_branch=BinaryOp(
+                    location=SourceLocation(file='dummy', row=1, column=24),
+                    left=Identifier(location=SourceLocation(
+                        file='dummy', row=1, column=24), name='x'),
+                    op='=',
+                    right=BinaryOp(
+                        location=SourceLocation(
+                            file='dummy', row=1, column=28),
+                        left=Identifier(location=SourceLocation(
+                            file='dummy', row=1, column=28), name='x'),
+                        op='+',
+                        right=Literal(location=SourceLocation(file='dummy', row=1, column=32), value=2))),
+                else_branch=BinaryOp(
+                    location=SourceLocation(file='dummy', row=1, column=39),
+                    left=Identifier(location=SourceLocation(
+                        file='dummy', row=1, column=39), name='x'),
+                    op='=',
+                    right=BinaryOp(
+                        location=SourceLocation(
+                            file='dummy', row=1, column=43),
+                        left=Identifier(location=SourceLocation(
+                            file='dummy', row=1, column=43), name='x'),
+                        op='+',
+                        right=Literal(location=SourceLocation(
+                            file='dummy', row=1, column=47), value=3)
+                    )
+                )
+            )
+        ]
+    )
+
+
+def test_parse_while_loop() -> None:
+    tokens = tokenize("while a > 0 do a = a - 1")
+    ast = parse(tokens)
+    assert ast == BlockExpression(
+        location=L, expressions=[
+            WhileLoop(location=L,
+                      while_condition=BinaryOp(
+                          location=L,
+                          left=Identifier(location=L, name="a"),
+                          op=">",
+                          right=Literal(location=L, value=0)
+                      ),
+                      do_expression=BinaryOp(
+                          location=L,
+                          left=Identifier(location=L, name="a"),
+                          op="=",
+                          right=BinaryOp(
+                              location=L,
+                              left=Identifier(L, "a"),
+                              op="-",
+                              right=Literal(L, 1)
+                          )
+                      ))
+        ]
+    )
