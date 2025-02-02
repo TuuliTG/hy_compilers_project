@@ -70,5 +70,45 @@ def test_assignment_fails_if_variable_is_not_declared() -> None:
         e.value)
 
 
+def test_and_operator() -> None:
+    assert tokenize_parse_and_interpret(
+        "var x=1; var y=2; if x==1 and y==2 then x+y else 0") == 3
+
+
+def test_and_operator_2() -> None:
+    assert tokenize_parse_and_interpret(
+        "var x=1; var y=2; if x==1 and y==3 then x+y else 0") == 0
+
+
+def test_and_operator_right_hand_side_not_evaluated() -> None:
+    assert tokenize_parse_and_interpret(
+        """
+    var evaluated_right_hand_side = false;
+    false and { evaluated_right_hand_side = true; true };
+    evaluated_right_hand_side 
+    """
+    ) == False
+
+
+def test_or_operator_right_hand_side_not_evaluated() -> None:
+    assert tokenize_parse_and_interpret(
+        """
+    var evaluated_right_hand_side = false;
+    true or { evaluated_right_hand_side = true; true };
+    evaluated_right_hand_side 
+    """
+    ) == False
+
+
+def test_or_operator() -> None:
+    assert tokenize_parse_and_interpret(
+        "var x = 1; var y = 2; if x == 2 or y == 2 then 2 else 0") == 2
+
+
+def test_while_loop() -> None:
+    assert tokenize_parse_and_interpret(
+        "var x = 10; while x > 0 do x = x - 1; x")
+
+
 def tokenize_parse_and_interpret(code: str):
     return interpret(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))

@@ -46,6 +46,18 @@ def more_than_or_equal(a: Value, b: Value) -> Value:
     return a >= b
 
 
+def equals(a: Value, b: Value) -> Value:
+    return a == b
+
+
+def modulus(a: Value, b: Value) -> Value:
+    return a % b
+
+
+def not_equals(a: Value, b: Value) -> Value:
+    return a != b
+
+
 def unary_negate(a: Value) -> Value:
     return -a
 
@@ -59,8 +71,13 @@ root_table.locals.update({
     '>': more_than,
     '<=': less_than_or_equal,
     '>=': more_than_or_equal,
+    '==': equals,
+    '!=': not_equals,
+    '%': modulus,
     'unary_-': unary_negate,
     'unary_not': unary_negate,
+    'true': True,
+    'false': False
 })
 
 
@@ -88,11 +105,27 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
         case ast.BinaryOp():
             a: Any = interpret(node.left, symTab)
             b: Any = interpret(node.right, symTab)
-            operator_function = find_variable(node.op.token, root_table)
-            if not callable(operator_function):
-                raise Exception(f"Operator {node.op.token} is not a function")
+            if node.op.token == 'and':
+                if a == False:
+                    return False
+                if a == True and b == True:
+                    return True
+            elif node.op.token == 'or':
+                if a == True:
+                    return True
+                elif b == True:
+                    return True
+                else:
+                    return False
+            else:
 
-            return operator_function(a, b)
+                operator_function = find_variable(node.op.token, root_table)
+
+                if not callable(operator_function):
+                    raise Exception(
+                        f"Operator {node.op.token} is not a function")
+
+                return operator_function(a, b)
 
         case ast.UnaryExpression():
             operand = interpret(node.operand, symTab)
@@ -105,10 +138,10 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
             return operator_function(operand)
 
         case ast.IfExpression():
-            if interpret(node.condition_branch):
-                return interpret(node.then_branch)
+            if interpret(node.condition_branch, symTab):
+                return interpret(node.then_branch, symTab)
             else:
-                return interpret(node.else_branch)
+                return interpret(node.else_branch, symTab)
 
         case ast.Identifier():
             return find_variable(node.name, symTab)
@@ -127,6 +160,9 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
             value = interpret(node.initializer, symTab)
             symTab.locals[variable_name] = value
             return value
+
+        case ast.BooleanLiteral():
+            return node.value
 
         case _:
             raise Exception(f"Unsupported AST node {node}")
