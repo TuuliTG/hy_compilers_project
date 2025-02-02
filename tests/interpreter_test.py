@@ -110,5 +110,18 @@ def test_while_loop() -> None:
         "var x = 10; while x > 0 do x = x - 1; x") == 0
 
 
+def test_function_call(capsys) -> None:
+    assert tokenize_parse_and_interpret("print_int(1)") == None
+    captured = capsys.readouterr()
+    assert captured.out == "1\n"
+
+
+def test_function_call_inside_expression(capsys) -> None:
+    assert tokenize_parse_and_interpret(
+        "var x = 2; if x == 2 then print_int(x+1) else print_int(x)") == None
+    captured = capsys.readouterr()
+    assert captured.out == "3\n"
+
+
 def tokenize_parse_and_interpret(code: str):
     return interpret(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))

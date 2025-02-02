@@ -62,6 +62,10 @@ def unary_negate(a: Value) -> Value:
     return -a
 
 
+def print_int(number: int):
+    print(f"{number}")
+
+
 root_table.locals.update({
     '+': add,
     '-': subtract,
@@ -77,11 +81,15 @@ root_table.locals.update({
     'unary_-': unary_negate,
     'unary_not': unary_negate,
     'true': True,
-    'false': False
+    'false': False,
+    'print_int': print_int
 })
 
 
 def interpret(node: ast.Expression, symTab: SymTab) -> Value:
+    if symTab.parent is None:
+        symTab.parent = root_table
+
     def find_variable(variable_name: str, symTab: SymTab) -> Value:
         if variable_name in symTab.locals.keys():
             return symTab.locals[variable_name]
@@ -167,6 +175,16 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
         case ast.WhileLoop():
             while (interpret(node.while_condition, symTab)):
                 interpret(node.do_expression, symTab)
+
+        case ast.FunctionExpression():
+            function_name = node.function_name
+            function_args = node.args
+            function = find_variable(function_name, symTab)
+            if not callable(function):
+                raise Exception(
+                    f"Function {node.function_name} is not a function")
+            args = [interpret(arg, symTab) for arg in function_args]
+            return function(*args)
 
         case _:
             raise Exception(f"Unsupported AST node {node}")
