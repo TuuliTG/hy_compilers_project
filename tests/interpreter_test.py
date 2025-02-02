@@ -52,5 +52,23 @@ def test_varible_declaration_in_different_blocks_fails_if_variable_is_not_found(
         e.value)
 
 
+def test_unary_operations() -> None:
+    assert tokenize_parse_and_interpret("var x = 1; -x") == -1
+    assert tokenize_parse_and_interpret("var x = 2; not x") == -2
+
+
+def test_assignment() -> None:
+    assert tokenize_parse_and_interpret("var x=1; x=2; x") == 2
+
+
+def test_assignment_fails_if_variable_is_not_declared() -> None:
+    with pytest.raises(Exception) as e:
+        tokenize_parse_and_interpret(
+            "var x=1; y=2; x"
+        )
+    assert "Unkown variable 'y'" in str(
+        e.value)
+
+
 def tokenize_parse_and_interpret(code: str):
-    return interpret(parse(tokenize(code)), symTab=SymTab(locals=dict()))
+    return interpret(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))

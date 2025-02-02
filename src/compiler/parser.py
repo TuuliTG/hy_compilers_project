@@ -193,15 +193,23 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression]:
         else:
             return parse_binary_operator_level(level=level+1)
 
+    def parse_assignment(variable_name: ast.Identifier, level: int):
+        consume("=")
+        initializer = parse_binary_operator_level(level)
+        return ast.Assignment(location=variable_name.location, variable_name=variable_name, initializer=initializer)
+
     def parse_right_associative_operation(level, current_level_tokens) -> ast.Expression:
         left = parse_binary_operator_level(level + 1)
         if peek().text in current_level_tokens:
-            operator_token = consume()
-            operator = ast.Operator(
-                location=operator_token.loc, token=operator_token.text)
-            right = parse_binary_operator_level(
-                level)
-            return ast.BinaryOp(location=left.location, left=left, op=operator, right=right)
+            if peek().text == '=':
+                return parse_assignment(left, level)
+            else:
+                operator_token = consume()
+                operator = ast.Operator(
+                    location=operator_token.loc, token=operator_token.text)
+                right = parse_binary_operator_level(
+                    level)
+                return ast.BinaryOp(location=left.location, left=left, op=operator, right=right)
         return left
 
     def parse_left_associative_operation(level, current_level_tokens) -> ast.Expression:

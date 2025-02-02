@@ -72,3 +72,9 @@ class BlockExpression(Expression):
 class VariableDeclaration(Expression):
     variable_name: str
     initializer: Expression
+
+
+@dataclass
+class Assignment(Expression):
+    variable_name: Identifier
+    initializer: Expression
