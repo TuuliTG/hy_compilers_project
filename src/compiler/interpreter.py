@@ -164,5 +164,9 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
         case ast.BooleanLiteral():
             return node.value
 
+        case ast.WhileLoop():
+            while (interpret(node.while_condition, symTab)):
+                interpret(node.do_expression, symTab)
+
         case _:
             raise Exception(f"Unsupported AST node {node}")

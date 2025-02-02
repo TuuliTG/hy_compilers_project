@@ -107,7 +107,7 @@ def test_or_operator() -> None:
 
 def test_while_loop() -> None:
     assert tokenize_parse_and_interpret(
-        "var x = 10; while x > 0 do x = x - 1; x")
+        "var x = 10; while x > 0 do x = x - 1; x") == 0
 
 
 def tokenize_parse_and_interpret(code: str):
