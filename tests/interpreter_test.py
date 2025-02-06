@@ -1,10 +1,11 @@
 from dataclasses import dataclass
+from typing import Callable
 from compiler.domain import Token, SourceLocation, L, TokenType
 from compiler.ast import BinaryOp, BlockExpression, BooleanLiteral, Expression, FunctionExpression, IfExpression, Literal, Identifier, Operator, UnaryExpression, VariableDeclaration, WhileLoop
 from compiler.parser import parse, parse
 import pytest
 from compiler.tokenizer import tokenize
-from compiler.interpreter import SymTab, interpret
+from compiler.interpreter import SymTab, Value, interpret
 
 
 def test_interpret_basic_arithmetics() -> None:
@@ -123,5 +124,5 @@ def test_function_call_inside_expression(capsys) -> None:
     assert captured.out == "3\n"
 
 
-def tokenize_parse_and_interpret(code: str):
-    return interpret(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))
+def tokenize_parse_and_interpret(code: str) -> Value:
+    return interpret(parse(tokenize(code))[0], symTab=SymTab(locals=dict(), parent=None))

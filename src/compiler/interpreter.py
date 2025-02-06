@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional
 from compiler import ast
 
-type Value = int | bool | None | Callable[[Value, Value], Value]
+type Value = int | bool | None | Callable[[
+    Value, Value], Value] | Callable[[Value], Value]
 
 
 @dataclass
@@ -14,55 +15,55 @@ class SymTab:
 root_table = SymTab(locals={}, parent=None)
 
 
-def add(a: Value, b: Value) -> Value:
+def add(a: Any, b: Any) -> Value:
     return a + b
 
 
-def subtract(a: Value, b: Value) -> Value:
+def subtract(a: Any, b: Any) -> Value:
     return a - b
 
 
-def multiply(a: Value, b: Value) -> Value:
+def multiply(a: Any, b: Any) -> Value:
     return a * b
 
 
-def divide(a: Value, b: Value) -> Value:
+def divide(a: Any, b: Any) -> Value:
     return a // b
 
 
-def less_than(a: Value, b: Value) -> Value:
+def less_than(a: Any, b: Any) -> Value:
     return a < b
 
 
-def more_than(a: Value, b: Value) -> Value:
+def more_than(a: Any, b: Any) -> Value:
     return a > b
 
 
-def less_than_or_equal(a: Value, b: Value) -> Value:
+def less_than_or_equal(a: Any, b: Any) -> Value:
     return a <= b
 
 
-def more_than_or_equal(a: Value, b: Value) -> Value:
+def more_than_or_equal(a: Any, b: Any) -> Value:
     return a >= b
 
 
-def equals(a: Value, b: Value) -> Value:
+def equals(a: Any, b: Any) -> Value:
     return a == b
 
 
-def modulus(a: Value, b: Value) -> Value:
+def modulus(a: Any, b: Any) -> Value:
     return a % b
 
 
-def not_equals(a: Value, b: Value) -> Value:
+def not_equals(a: Any, b: Any) -> Value:
     return a != b
 
 
-def unary_negate(a: Value) -> Value:
+def unary_negate(a: Any) -> Value:
     return -a
 
 
-def print_int(number: int):
+def print_int(number: int) -> None:
     print(f"{number}")
 
 
@@ -141,7 +142,8 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
                 f"unary_{node.operator.token}", root_table)
 
             if not callable(operator_function):
-                raise Exception(f"Operator {node.op.token} is not a function")
+                raise Exception(
+                    f"Operator {node.operator.token} is not a function")
 
             return operator_function(operand)
 
@@ -175,6 +177,7 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
         case ast.WhileLoop():
             while (interpret(node.while_condition, symTab)):
                 interpret(node.do_expression, symTab)
+            return None
 
         case ast.FunctionExpression():
             function_name = node.function_name

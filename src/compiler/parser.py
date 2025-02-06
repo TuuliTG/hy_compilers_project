@@ -1,5 +1,5 @@
 import compiler
-from compiler.domain import L, Token, TokenType
+from compiler.domain import L, SourceLocation, Token, TokenType
 import compiler.ast as ast
 
 """
@@ -171,7 +171,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression]:
             )
         return ast.IfExpression(if_token.loc, condition_branch=condition_branch, then_branch=then_branch, else_branch=None)
 
-    def parse_function_call(function_name, location):
+    def parse_function_call(function_name: str, location: SourceLocation) -> ast.Expression:
         consume('(')
         args: list[ast.Expression] = []
         while True:
@@ -183,7 +183,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression]:
                 break
         return ast.FunctionExpression(location=location, function_name=function_name, args=args)
 
-    def parse_unary_operation(level, current_level_tokens) -> ast.Expression:
+    def parse_unary_operation(level: int, current_level_tokens: list[str]) -> ast.Expression:
         if peek().text in current_level_tokens:
             operator_token = consume()
             operator = ast.Operator(
@@ -193,15 +193,15 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression]:
         else:
             return parse_binary_operator_level(level=level+1)
 
-    def parse_assignment(variable_name: ast.Identifier, level: int):
+    def parse_assignment(variable_name: ast.Identifier, level: int) -> ast.Expression:
         consume("=")
         initializer = parse_binary_operator_level(level)
         return ast.Assignment(location=variable_name.location, variable_name=variable_name, initializer=initializer)
 
-    def parse_right_associative_operation(level, current_level_tokens) -> ast.Expression:
+    def parse_right_associative_operation(level: int, current_level_tokens: list[str]) -> ast.Expression:
         left = parse_binary_operator_level(level + 1)
         if peek().text in current_level_tokens:
-            if peek().text == '=':
+            if peek().text == '=' and isinstance(left, ast.Identifier):
                 return parse_assignment(left, level)
             else:
                 operator_token = consume()
@@ -212,7 +212,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression]:
                 return ast.BinaryOp(location=left.location, left=left, op=operator, right=right)
         return left
 
-    def parse_left_associative_operation(level, current_level_tokens) -> ast.Expression:
+    def parse_left_associative_operation(level: int, current_level_tokens: list[str]) -> ast.Expression:
         left = parse_binary_operator_level(level + 1)
         while peek().text in current_level_tokens:
             operator_token = consume()
@@ -288,7 +288,7 @@ def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression]:
     return parse_expressions()
 
 
-def _validate_that_expression_ends_with_semicolumn_if_needed(tokens, new_position, latest_expression):
+def _validate_that_expression_ends_with_semicolumn_if_needed(tokens: list[Token], new_position: int, latest_expression: ast.Expression):
     if len(tokens) > new_position and not tokens[new_position].text == ';':
         if not isinstance(latest_expression, ast.BlockExpression):
             raise Exception(f"""
@@ -296,7 +296,7 @@ def _validate_that_expression_ends_with_semicolumn_if_needed(tokens, new_positio
             )
 
 
-def _should_append_unit_in_the_end(expressions, ends_with_semicolon) -> bool:
+def _should_append_unit_in_the_end(expressions: list[ast.Expression], ends_with_semicolon: bool) -> bool:
     if not isinstance(expressions[-1], ast.BlockExpression):
         if ends_with_semicolon:
             return True
