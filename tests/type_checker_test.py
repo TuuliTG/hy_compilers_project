@@ -24,6 +24,7 @@ def test_and_or() -> None:
 
 def test_return_unit() -> None:
     assert _tokenize_parse_type_check("1+2;") == Unit
+    assert _tokenize_parse_type_check("{}") == Unit
 
 
 def test_unary_op() -> None:
@@ -51,6 +52,13 @@ def test_assignment() -> None:
     assert _tokenize_parse_type_check("var a = 1; {var b=2; a = true}") == Bool
     _assert_raises_exception(
         "var a = 1; b = 2", "Variable 'b' has not been declared")
+
+
+def test_while_loop() -> None:
+    assert _tokenize_parse_type_check("while true do 1+2") == Unit
+    _assert_raises_exception(
+        "while 1 do 2+2", "While loop condition should be of boolean type, got 'BasicType(name='Int')'"
+    )
 
 
 def _tokenize_parse_type_check(code: str) -> Type:

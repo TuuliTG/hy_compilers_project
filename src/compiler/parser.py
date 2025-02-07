@@ -126,6 +126,9 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
     def parse_block() -> ast.Expression:
         token = consume('{')
         expressions: list[ast.Expression] = []
+        if peek().text == '}':
+            consume('}')
+            return ast.BlockExpression(location=token.loc, expressions=[ast.Literal(location=token.loc, value=None)])
         while True:
             if peek().text == "var":
                 expression = parse_variable_declaration()

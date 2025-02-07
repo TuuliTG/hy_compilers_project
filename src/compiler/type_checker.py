@@ -21,6 +21,8 @@ root_table.locals.update({
     'or': FunType(name='funtype', args=[Bool, Bool], return_type=Bool),
     'and': FunType(name='funtype', args=[Bool, Bool], return_type=Bool),
     'print_int': FunType(name='funtype', args=[Int], return_type=Unit),
+    'print_bool': FunType(name='funtype', args=[Bool], return_type=Unit),
+    'read_int': FunType(name='funtype', args=[Int], return_type=Unit),
 })
 
 
@@ -103,7 +105,7 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
                 if t2 != t3:
                     raise Exception(
                         "Then branch and else branch should have the same return type")
-            return t2
+            return Unit
 
         case ast.Literal():
             if isinstance(node.value, int):
@@ -135,5 +137,13 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
             type, _ = find_type(node.function_name, symTab)
             return type
 
+        case ast.WhileLoop():
+            condition_type = typecheck(node.while_condition, symTab)
+            if condition_type.name != 'Bool':
+                raise Exception(f"While loop condition should be of boolean type, got '{condition_type}'"
+                                )
+            else:
+                typecheck(node.do_expression, symTab)
+            return Unit
         case _:
             raise Exception(f"Unsupported AST node {node}")
