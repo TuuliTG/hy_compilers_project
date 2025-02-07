@@ -12,7 +12,7 @@ class BasicType(Type):
 
 
 @dataclass(frozen=True)
-class FunType(Type):
+class FunType(BasicType):
     args: list[Type]
     return_type: Type
 

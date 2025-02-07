@@ -34,7 +34,7 @@ precedence_order_list = (
 )
 
 
-def parse(tokens: list[Token], pos: int = 0) -> tuple[ast.Expression]:
+def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
 
     def peek() -> Token:
         if tokens:

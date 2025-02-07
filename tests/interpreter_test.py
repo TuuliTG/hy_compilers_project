@@ -125,4 +125,4 @@ def test_function_call_inside_expression(capsys) -> None:
 
 
 def tokenize_parse_and_interpret(code: str) -> Value:
-    return interpret(parse(tokenize(code))[0], symTab=SymTab(locals=dict(), parent=None))
+    return interpret(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))

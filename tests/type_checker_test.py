@@ -1,13 +1,64 @@
+from compiler.interpreter import SymTab
 from compiler.parser import parse
 from compiler.tokenizer import tokenize
 from compiler.type_checker import typecheck
-from compiler.types import Int, Type
+from compiler.types import Bool, FunType, Int, Type, Unit
 import pytest
 
 
 def test_type_checker_basic() -> None:
     assert _tokenize_parse_type_check("1+2") == Int
+    assert _tokenize_parse_type_check("1*2") == Int
+    assert _tokenize_parse_type_check("1<2") == Bool
+    _assert_raises_exception(
+        "true < 2", "Operator < expects two BasicType(name='Int')"
+    )
+
+
+def test_and_or() -> None:
+    assert _tokenize_parse_type_check("1<2 or 1>3") == Bool
+    assert _tokenize_parse_type_check("1<2 and 1>3") == Bool
+    _assert_raises_exception(
+        "1 or 1>3", "Operator or expects two BasicType(name='Bool')")
+
+
+def test_return_unit() -> None:
+    assert _tokenize_parse_type_check("1+2;") == Unit
+
+
+def test_unary_op() -> None:
+    assert _tokenize_parse_type_check("-1") == Int
+    _assert_raises_exception("- true", "Expected an integer with '-' operator")
+    assert _tokenize_parse_type_check("not true") == Bool
+    assert _tokenize_parse_type_check("not (1>2)") == Bool
+    assert _tokenize_parse_type_check("-(1+2)") == Int
+    _assert_raises_exception("not 1", "Expected a boolean with 'not' operator")
+
+
+def test_function() -> None:
+    assert _tokenize_parse_type_check(
+        "print_int(1)") == FunType(name='funtype', args=[Int], return_type=Unit)
+
+
+def test_variable_declaration() -> None:
+    assert _tokenize_parse_type_check("var a = 1;") == Unit
+    _assert_raises_exception("var a = 1; var a=2",
+                             "Variable 'a' already exists")
+
+
+def test_assignment() -> None:
+    assert _tokenize_parse_type_check("var a = 1; a = 2") == Int
+    assert _tokenize_parse_type_check("var a = 1; {var b=2; a = true}") == Bool
+    _assert_raises_exception(
+        "var a = 1; b = 2", "Variable 'b' has not been declared")
 
 
 def _tokenize_parse_type_check(code: str) -> Type:
-    return typecheck(parse(tokenize(code)))
+    return typecheck(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))
+
+
+def _assert_raises_exception(code: str, error_msg: str) -> None:
+    with pytest.raises(Exception) as e:
+        _tokenize_parse_type_check(code)
+    assert error_msg in str(
+        e.value)
