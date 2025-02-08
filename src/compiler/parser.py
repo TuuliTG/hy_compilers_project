@@ -1,6 +1,7 @@
 import compiler
 from compiler.domain import L, SourceLocation, Token, TokenType
 import compiler.ast as ast
+from compiler.types import Bool, Int, Type
 
 """
 If the tokens starting at pos match the things that the parsing function wants to parse,
@@ -247,16 +248,30 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
         raise Exception(
             f"Unsupported operator type at precedence level {level}")
 
+    def parse_type() -> Type:
+        type = consume().text
+        match type:
+            case "Int":
+                return Int
+            case "Bool":
+                return Bool
+            case _:
+                raise Exception(f"Unkown type {type}")
+
     def parse_variable_declaration() -> ast.Expression:
         location = peek().loc
         consume("var")
         if peek().type != TokenType.IDENTIFIER:
             raise Exception(f'{tokens[pos].loc}: expected an identifier')
         variable_name = consume().text
-
+        variable_type = None
+        if peek().text == ':':
+            consume(':')
+            variable_type = parse_type()
         consume("=")
         initializer = parse_binary_operator_level(0)
-        return ast.VariableDeclaration(location=location, variable_name=variable_name, initializer=initializer)
+
+        return ast.VariableDeclaration(location=location, variable_name=variable_name, type=variable_type, initializer=initializer)
 
     def parse_expressions() -> ast.Expression | None:
         ends_with_semicolon = False

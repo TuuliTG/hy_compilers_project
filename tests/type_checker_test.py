@@ -1,7 +1,7 @@
 from compiler.interpreter import SymTab
 from compiler.parser import parse
 from compiler.tokenizer import tokenize
-from compiler.type_checker import typecheck
+from compiler.type_checker import get_type, typecheck
 from compiler.types import Bool, FunType, Int, Type, Unit
 import pytest
 
@@ -12,6 +12,18 @@ def test_type_checker_basic() -> None:
     assert _tokenize_parse_type_check("1<2") == Bool
     _assert_raises_exception(
         "true < 2", "Operator < expects two BasicType(name='Int')"
+    )
+
+
+def test_equals_and_not_equals() -> None:
+    assert _tokenize_parse_type_check("1==2") == Bool
+    assert _tokenize_parse_type_check("1 != 2") == Bool
+    assert _tokenize_parse_type_check("true != false") == Bool
+    _assert_raises_exception(
+        "true == 1", "Expressions should be of the same type"
+    )
+    _assert_raises_exception(
+        "true != 1", "Expressions should be of the same type"
     )
 
 
@@ -47,11 +59,22 @@ def test_variable_declaration() -> None:
                              "Variable 'a' already exists")
 
 
+def test_typed_variable_declaration() -> None:
+    assert _tokenize_parse_type_check("var x: Int = 1") == Unit
+    _assert_raises_exception(
+        "var x: Int = true", "Expected the variable to be of type Int but found Bool"
+    )
+    assert _tokenize_parse_type_check("var x: Bool = true") == Unit
+
+
 def test_assignment() -> None:
     assert _tokenize_parse_type_check("var a = 1; a = 2") == Int
-    assert _tokenize_parse_type_check("var a = 1; {var b=2; a = true}") == Bool
+    assert _tokenize_parse_type_check("var a = 1; {var b=2; a = 3}") == Int
     _assert_raises_exception(
-        "var a = 1; b = 2", "Variable 'b' has not been declared")
+        "var a = 1; b = 2", "Variable 'b' has not been declared"
+    )
+    _assert_raises_exception(
+        "var a = 1; {var b=2; a = true}", "Variable 'a' should be of the type 'Int'")
 
 
 def test_while_loop() -> None:
@@ -62,7 +85,7 @@ def test_while_loop() -> None:
 
 
 def _tokenize_parse_type_check(code: str) -> Type:
-    return typecheck(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))
+    return get_type(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))
 
 
 def _assert_raises_exception(code: str, error_msg: str) -> None:

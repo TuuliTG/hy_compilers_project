@@ -15,8 +15,6 @@ root_table.locals.update({
     '>': FunType(name='funtype', args=[Int, Int], return_type=Bool),
     '<=': FunType(name='funtype', args=[Int, Int], return_type=Bool),
     '>=': FunType(name='funtype', args=[Int, Int], return_type=Bool),
-    '==': FunType(name='funtype', args=[Int, Int], return_type=Bool),
-    '!=': FunType(name='funtype', args=[Int, Int], return_type=Bool),
     '%': FunType(name='funtype', args=[Int, Int], return_type=Int),
     'or': FunType(name='funtype', args=[Bool, Bool], return_type=Bool),
     'and': FunType(name='funtype', args=[Bool, Bool], return_type=Bool),
@@ -24,6 +22,12 @@ root_table.locals.update({
     'print_bool': FunType(name='funtype', args=[Bool], return_type=Unit),
     'read_int': FunType(name='funtype', args=[Int], return_type=Unit),
 })
+
+
+def get_type(node: ast.Expression, symTab: SymTab) -> Type:
+    type = typecheck(node, symTab)
+    node.type = type
+    return type
 
 
 def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
@@ -40,8 +44,14 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
 
     match node:
         case ast.BinaryOp():
-            t1 = typecheck(node.left, symTab)
-            t2 = typecheck(node.right, symTab)
+            t1 = get_type(node.left, symTab)
+            t2 = get_type(node.right, symTab)
+
+            if node.op.token == '==' or node.op.token == '!=':
+                if t1 != t2:
+                    raise Exception('Expressions should be of the same type. ')
+                else:
+                    return Bool
 
             expected_type, _ = find_type(node.op.token, symTab)
             if isinstance(expected_type, FunType):
@@ -54,7 +64,7 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
 
         case ast.UnaryExpression():
             operator = node.operator
-            token_type = typecheck(node.operand, symTab)
+            token_type = get_type(node.operand, symTab)
             if operator.token == '-':
                 if token_type.name != 'Int':
                     raise Exception(
@@ -71,7 +81,16 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
                     f"Variable '{node.variable_name}' already exists"
                 )
 
-            type = typecheck(node.initializer, symTab)
+            expected_type = node.type
+
+            type = get_type(node.initializer, symTab)
+            if expected_type is not None:
+                if type != expected_type:
+                    raise Exception(
+                        f"""
+                    Expected the variable to be of type {expected_type.name} but found {type.name}
+                                    """
+                    )
             symTab.locals[variable_name] = type
             return Unit
 
@@ -85,23 +104,30 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
                         """
                 )
             try:
-                _, sym_tab_where_variable_was_found = find_type(
+                old_type, sym_tab_where_variable_was_found = find_type(
                     variable_name.name, symTab)
             except:
                 raise Exception(
                     f"Variable '{variable_name.name}' has not been declared")
 
-            new_type = typecheck(node.initializer, symTab)
+            new_type = get_type(node.initializer, symTab)
+            if new_type != old_type:
+                raise Exception(
+                    f"""
+                    Variable '{variable_name.name}' should be of the type '{old_type.name}'
+                    """
+                )
+
             sym_tab_where_variable_was_found.locals[variable_name.name] = new_type
             return new_type
 
         case ast.IfExpression():
-            t1 = typecheck(node.condition_branch, symTab)
+            t1 = get_type(node.condition_branch, symTab)
             if t1 is not Bool:
                 raise Exception("Expected boolean value")
-            t2 = typecheck(node.then_branch, symTab)
+            t2 = get_type(node.then_branch, symTab)
             if node.else_branch is not None:
-                t3 = typecheck(node.else_branch, symTab)
+                t3 = get_type(node.else_branch, symTab)
                 if t2 != t3:
                     raise Exception(
                         "Then branch and else branch should have the same return type")
@@ -129,21 +155,21 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
             index = 0
             sym_tab = SymTab(parent=symTab, locals=dict())
             while index < len(node.expressions)-1:
-                typecheck(node.expressions[index], sym_tab)
+                get_type(node.expressions[index], sym_tab)
                 index = index + 1
-            return typecheck(node.expressions[-1], sym_tab)
+            return get_type(node.expressions[-1], sym_tab)
 
         case ast.FunctionExpression():
             type, _ = find_type(node.function_name, symTab)
             return type
 
         case ast.WhileLoop():
-            condition_type = typecheck(node.while_condition, symTab)
+            condition_type = get_type(node.while_condition, symTab)
             if condition_type.name != 'Bool':
                 raise Exception(f"While loop condition should be of boolean type, got '{condition_type}'"
                                 )
             else:
-                typecheck(node.do_expression, symTab)
+                get_type(node.do_expression, symTab)
             return Unit
         case _:
             raise Exception(f"Unsupported AST node {node}")

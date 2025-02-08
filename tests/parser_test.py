@@ -3,6 +3,7 @@ from compiler.ast import Assignment, BinaryOp, BlockExpression, BooleanLiteral, 
 from compiler.parser import parse, parse
 import pytest
 from compiler.tokenizer import tokenize
+from compiler.types import Bool, Int
 
 
 def test_parse_sum() -> None:
@@ -1018,7 +1019,7 @@ def test_simple_variable_declaration() -> None:
     tokens = tokenize("var x = 1")
     ast = parse(tokens)
     assert ast == BlockExpression(location=L, expressions=[
-        VariableDeclaration(location=L, variable_name="x",
+        VariableDeclaration(location=L, variable_name="x", type=None,
                             initializer=Literal(location=L, value=1))
     ])
 
@@ -1027,8 +1028,26 @@ def test_variable_declaration() -> None:
     tokens = tokenize("var x = f(a)")
     ast = parse(tokens)
     assert ast == BlockExpression(location=L, expressions=[
-        VariableDeclaration(location=L, variable_name="x", initializer=FunctionExpression(
+        VariableDeclaration(location=L, variable_name="x", type=None, initializer=FunctionExpression(
             location=L, function_name="f", args=[Identifier(location=L, name="a")]))
+    ])
+
+
+def test_typed_variable_declaration() -> None:
+    tokens = tokenize("var x: Int = f(a)")
+    ast = parse(tokens)
+    assert ast == BlockExpression(location=L, expressions=[
+        VariableDeclaration(location=L, variable_name="x", type=Int, initializer=FunctionExpression(
+            location=L, function_name="f", args=[Identifier(location=L, name="a")]))
+    ])
+
+
+def test_typed_variable_declaration_2() -> None:
+    tokens = tokenize("var x: Bool = true")
+    ast = parse(tokens)
+    assert ast == BlockExpression(location=L, expressions=[
+        VariableDeclaration(location=L, variable_name="x", type=Bool,
+                            initializer=BooleanLiteral(location=L, value=True))
     ])
 
 
@@ -1045,7 +1064,7 @@ def test_simple_variable_declaration_inside_block() -> None:
     ast = parse(tokens)
     assert ast == BlockExpression(location=L, expressions=[
         VariableDeclaration(location=SourceLocation("dummy", row=1, column=1), variable_name="x",
-                            initializer=Literal(location=L, value=1))
+                            type=None, initializer=Literal(location=L, value=1))
     ])
 
 
