@@ -148,10 +148,17 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
             return operator_function(operand)
 
         case ast.IfExpression():
-            if interpret(node.condition_branch, symTab):
-                return interpret(node.then_branch, symTab)
+            if node.else_branch is None:
+                if interpret(node.condition_branch, symTab):
+                    interpret(node.then_branch, symTab)
+                    return None
+                else:
+                    return None
             else:
-                return interpret(node.else_branch, symTab)
+                if interpret(node.condition_branch, symTab):
+                    return interpret(node.then_branch, symTab)
+                else:
+                    return interpret(node.else_branch, symTab)
 
         case ast.Identifier():
             return find_variable(node.name, symTab)

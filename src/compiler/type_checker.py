@@ -131,6 +131,8 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
                 if t2 != t3:
                     raise Exception(
                         "Then branch and else branch should have the same return type")
+                else:
+                    return t2
             return Unit
 
         case ast.Literal():

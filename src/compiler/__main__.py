@@ -5,6 +5,12 @@ import sys
 from socketserver import ForkingTCPServer, StreamRequestHandler
 from traceback import format_exception
 from typing import Any
+from compiler.interpreter import SymTab
+
+from compiler.ir_generator import generate_ir
+from compiler.parser import parse
+from compiler.tokenizer import tokenize
+from compiler.type_checker import get_type
 
 
 def call_compiler(source_code: str, input_file_name: str) -> bytes:
@@ -63,6 +69,14 @@ def main() -> int:
             run_server(host, port)
         except KeyboardInterrupt:
             pass
+    elif command == 'ir':
+        code = input()
+        nodes = parse(tokenize(code))
+        get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
+        irs = generate_ir(nodes)
+
+        for ir in irs:
+            print(ir)
     else:
         print(f"Error: unknown command: {command}", file=sys.stderr)
         return 1

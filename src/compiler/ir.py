@@ -65,12 +65,12 @@ class Copy(Instruction):
 
 
 @dataclass(frozen=True)
-class Jump():
+class Jump(Instruction):
     label: Label
 
 
 @dataclass(frozen=True)
-class CondJump():
+class CondJump(Instruction):
     cond: IRVar
     then_label: Label
     else_label: Label

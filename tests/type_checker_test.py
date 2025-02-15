@@ -84,6 +84,20 @@ def test_while_loop() -> None:
     )
 
 
+def test_if_condition_with_else_branch_return_correct_type() -> None:
+    assert _tokenize_parse_type_check("if 1 < 2 then 3 else 4") == Int
+    assert _tokenize_parse_type_check("if 1 < 2 then true else false") == Bool
+
+
+def test_if_condition_without_else_branch_returns_unit_type() -> None:
+    assert _tokenize_parse_type_check("if 1 < 2 then 3") == Unit
+
+
+def test_if_clause_fails_if_types_are_different() -> None:
+    _assert_raises_exception("if 1<2 then 1 else true",
+                             "Then branch and else branch should have the same return type")
+
+
 def _tokenize_parse_type_check(code: str) -> Type:
     return get_type(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))
 

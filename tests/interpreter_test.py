@@ -124,5 +124,14 @@ def test_function_call_inside_expression(capsys) -> None:
     assert captured.out == "3\n"
 
 
+def test_if_expression_without_else_branch() -> None:
+    assert tokenize_parse_and_interpret("if 1 < 2 then 3") == None
+
+
+def test_if_expression_without_else_branch_2() -> None:
+    assert tokenize_parse_and_interpret(
+        "var x =1; if 1 < 2 then x=2; x") == 2
+
+
 def tokenize_parse_and_interpret(code: str) -> Value:
     return interpret(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))
