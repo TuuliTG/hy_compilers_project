@@ -2,7 +2,7 @@ from compiler.interpreter import SymTab
 from compiler.parser import parse
 from compiler.tokenizer import tokenize
 from compiler.type_checker import get_type, typecheck
-from compiler.types import Bool, FunType, Int, Type, Unit
+from compiler.types import Bool, FunType, Int, Unit, Type
 import pytest
 
 
@@ -104,7 +104,11 @@ def test_if_clause_fails_if_types_are_different() -> None:
 
 
 def _tokenize_parse_type_check(code: str) -> Type:
-    return get_type(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))
+    nodes = parse(tokenize(code))
+    if nodes is not None:
+        return get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
+    else:
+        raise Exception("No nodes")
 
 
 def _assert_raises_exception(code: str, error_msg: str) -> None:

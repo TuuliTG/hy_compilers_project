@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 import compiler.ast as ast
 from compiler.interpreter import SymTab
-from compiler.types import BasicType, Bool, FunType, Int, Type, Unit
+from compiler.types import Bool, FunType, Int, Type, Unit
 
 
 root_table = SymTab(locals={}, parent=None)
@@ -34,7 +34,7 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
     if symTab.parent is None:
         symTab.parent = root_table
 
-    def find_type(variable_name: str, symTab: SymTab) -> tuple[BasicType, SymTab]:
+    def find_type(variable_name: str, symTab: SymTab) -> tuple[Type, SymTab]:
         if variable_name in symTab.locals.keys():
             return symTab.locals[variable_name], symTab
         elif symTab.parent is not None:

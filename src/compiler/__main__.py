@@ -74,25 +74,28 @@ def main() -> int:
     elif command == 'ir':
         code = read_source_code()
         nodes = parse(tokenize(code))
-        get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
-        irs = generate_ir(nodes)
+        if nodes is not None:
+            get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
+            irs = generate_ir(nodes)
 
-        for ir in irs:
-            print(ir)
+            for ir in irs:
+                print(ir)
     elif command == 'asm':
         code = read_source_code()
         nodes = parse(tokenize(code))
-        get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
-        irs = generate_ir(nodes)
-        asm_code = generate_assembly(irs)
-        print(asm_code)
+        if nodes is not None:
+            get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
+            irs = generate_ir(nodes)
+            asm_code = generate_assembly(irs)
+            print(asm_code)
     elif command == 'run':
         code = read_source_code()
         nodes = parse(tokenize(code))
-        get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
-        irs = generate_ir(nodes)
-        asm_code = generate_assembly(irs)
-        assemble(asm_code, 'compiled_program')
+        if nodes is not None:
+            get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
+            irs = generate_ir(nodes)
+            asm_code = generate_assembly(irs)
+            assemble(asm_code, 'compiled_program')
     else:
         print(f"Error: unknown command: {command}", file=sys.stderr)
         return 1

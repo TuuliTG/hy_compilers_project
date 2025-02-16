@@ -2,12 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class Type:
-    """Base class for types"""
-
-
-@dataclass(frozen=True)
-class BasicType(Type):
+class Type():
     name: str
 
     def __str__(self) -> str:
@@ -15,11 +10,11 @@ class BasicType(Type):
 
 
 @dataclass(frozen=True)
-class FunType(BasicType):
+class FunType(Type):
     args: list[Type]
     return_type: Type
 
 
-Int = BasicType('Int')
-Bool = BasicType('Bool')
-Unit = BasicType('Unit')
+Int = Type('Int')
+Bool = Type('Bool')
+Unit = Type('Unit')

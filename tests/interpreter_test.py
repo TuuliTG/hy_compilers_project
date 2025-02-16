@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable, Generator
 from compiler.domain import Token, SourceLocation, L, TokenType
 from compiler.ast import BinaryOp, BlockExpression, BooleanLiteral, Expression, FunctionExpression, IfExpression, Literal, Identifier, Operator, UnaryExpression, VariableDeclaration, WhileLoop
 from compiler.parser import parse, parse
@@ -111,13 +111,13 @@ def test_while_loop() -> None:
         "var x = 10; while x > 0 do x = x - 1; x") == 0
 
 
-def test_function_call(capsys) -> None:
+def test_function_call(capsys: Any) -> None:
     assert tokenize_parse_and_interpret("print_int(1)") == None
     captured = capsys.readouterr()
     assert captured.out == "1\n"
 
 
-def test_function_call_inside_expression(capsys) -> None:
+def test_function_call_inside_expression(capsys: Any) -> None:
     assert tokenize_parse_and_interpret(
         "var x = 2; if x == 2 then print_int(x+1) else print_int(x)") == None
     captured = capsys.readouterr()
@@ -134,4 +134,8 @@ def test_if_expression_without_else_branch_2() -> None:
 
 
 def tokenize_parse_and_interpret(code: str) -> Value:
-    return interpret(parse(tokenize(code)), symTab=SymTab(locals=dict(), parent=None))
+    nodes = parse(tokenize(code))
+    if nodes is not None:
+        return interpret(nodes, symTab=SymTab(locals=dict(), parent=None))
+    else:
+        raise Exception("No nodes")

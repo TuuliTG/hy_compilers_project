@@ -2,7 +2,7 @@ from compiler import ast, ir
 from compiler.domain import L
 from compiler.interpreter import SymTab
 from compiler.ir import IRVar, Instruction, Label
-from compiler.types import BasicType, Bool, Int, Type, Unit
+from compiler.types import Bool, Int, Type, Unit
 
 
 def get_root_types() -> dict[IRVar, Type]:
@@ -30,7 +30,7 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
         next_var_number += 1
         return var
 
-    def new_label(name: str = None) -> Label:
+    def new_label(name: str | None = None) -> Label:
         nonlocal next_label_number
         if name is None:
             label = Label(L, f'L{next_label_number}')
@@ -39,7 +39,7 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
             label = Label(L, name)
         return label
 
-    def generate_if_expression_without_else_branch(node: ast.Expression, symTab) -> IRVar:
+    def generate_if_expression_without_else_branch(node: ast.IfExpression, symTab: SymTab) -> IRVar:
         l_then = new_label()
         var_cond = visit(node.condition_branch, symTab)
         l_end = new_label()
@@ -78,7 +78,7 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
                             node.type}"""
                     )
             case ast.BooleanLiteral():
-                var = new_var()
+                var = new_var(Bool)
                 instructions.append(ir.LoadBoolConst(
                     node.location, node.value, var
                 ))
@@ -154,11 +154,12 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
                 instructions.append(ir.CondJump(
                     node.location, var_cond, l_body, l_end))
                 instructions.append(l_body)
-                visit(node.do_expression, symTab)
+                var_do = visit(node.do_expression, symTab)
                 instructions.append(
                     ir.Jump(node.do_expression.location, l_start)
                 )
                 instructions.append(l_end)
+                return var_do
 
             case ast.IfExpression():
                 if node.else_branch is None:

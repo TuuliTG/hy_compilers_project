@@ -37,5 +37,8 @@ def test_assignment() -> None:
 
 def _generate_ir(code: str) -> list[ir.Instruction]:
     nodes = parse(tokenize(code))
-    get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
-    return generate_ir(nodes)
+    if nodes is not None:
+        get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
+        return generate_ir(nodes)
+    else:
+        return []
