@@ -10,6 +10,9 @@ class Type:
 class BasicType(Type):
     name: str
 
+    def __str__(self) -> str:
+        return f'{self.name}'
+
 
 @dataclass(frozen=True)
 class FunType(BasicType):

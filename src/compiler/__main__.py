@@ -5,6 +5,8 @@ import sys
 from socketserver import ForkingTCPServer, StreamRequestHandler
 from traceback import format_exception
 from typing import Any
+from assembly_generator import generate_assembly
+from compiler.assembler import assemble
 from compiler.interpreter import SymTab
 
 from compiler.ir_generator import generate_ir
@@ -70,13 +72,27 @@ def main() -> int:
         except KeyboardInterrupt:
             pass
     elif command == 'ir':
-        code = input()
+        code = read_source_code()
         nodes = parse(tokenize(code))
         get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
         irs = generate_ir(nodes)
 
         for ir in irs:
             print(ir)
+    elif command == 'asm':
+        code = read_source_code()
+        nodes = parse(tokenize(code))
+        get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
+        irs = generate_ir(nodes)
+        asm_code = generate_assembly(irs)
+        print(asm_code)
+    elif command == 'run':
+        code = read_source_code()
+        nodes = parse(tokenize(code))
+        get_type(nodes, symTab=SymTab(locals=dict(), parent=None))
+        irs = generate_ir(nodes)
+        asm_code = generate_assembly(irs)
+        assemble(asm_code, 'compiled_program')
     else:
         print(f"Error: unknown command: {command}", file=sys.stderr)
         return 1

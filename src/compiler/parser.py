@@ -1,7 +1,7 @@
 import compiler
 from compiler.domain import L, SourceLocation, Token, TokenType
 import compiler.ast as ast
-from compiler.types import Bool, Int, Type
+from compiler.types import Bool, Int, Type, Unit
 
 """
 If the tokens starting at pos match the things that the parsing function wants to parse,
@@ -35,7 +35,7 @@ precedence_order_list = (
 )
 
 
-def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
+def parse(tokens: list[Token], pos: int = 0) -> ast.Expression | None:
 
     def peek() -> Token:
         if tokens:
@@ -89,7 +89,7 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
                 return parse_function_call(function_name=token.text, location=token.loc)
             return ast.Identifier(location=token.loc, name=token.text)
 
-    def parse_factor() -> ast.Expression:
+    def parse_factor() -> ast.Expression | None:
         if peek().text == '(':
             return parse_parenthesized()
         elif peek().text == "if":
@@ -109,7 +109,9 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
     def parse_punctuation() -> ast.Expression | None:
         token = consume()
         if token.text == ';':
-            return
+            return None
+        else:
+            return None
 
     def parse_parenthesized() -> ast.Expression:
         consume('(')
@@ -191,11 +193,21 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
         if peek().text in current_level_tokens:
             operator_token = consume()
             operator = ast.Operator(
-                location=operator_token.loc, token=operator_token.text)
+                location=operator_token.loc, token=operator_token.text
+            )
             if operator_token.text == '-':
-                operand = parse_factor()
+                factor = parse_factor()
+                if factor is not None:
+                    operand = factor
+                else:
+                    raise Exception("Unary operand was None")
             else:
-                operand = parse_binary_operator_level(0)
+                bo = parse_binary_operator_level(0)
+                if bo is not None:
+                    operand = bo
+                else:
+                    raise Exception("Unary operand was None")
+
             return ast.UnaryExpression(location=operator_token.loc, operator=operator, operand=operand)
         else:
             return parse_binary_operator_level(level=level+1)
@@ -234,7 +246,11 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
 
     def parse_binary_operator_level(level: int) -> ast.Expression:
         if level == len(precedence_order_list):
-            return parse_factor()
+            factor = parse_factor()
+            if factor is not None:
+                return factor
+            else:
+                raise Exception("Factor was None")
 
         current_level_tokens = precedence_order_list[level]
 
@@ -267,14 +283,15 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
         if peek().type != TokenType.IDENTIFIER:
             raise Exception(f'{tokens[pos].loc}: expected an identifier')
         variable_name = consume().text
-        variable_type = None
         if peek().text == ':':
             consume(':')
             variable_type = parse_type()
+            consume("=")
+            initializer = parse_binary_operator_level(0)
+            return ast.VariableDeclaration(location=location, variable_name=variable_name, type=variable_type, initializer=initializer)
         consume("=")
         initializer = parse_binary_operator_level(0)
-
-        return ast.VariableDeclaration(location=location, variable_name=variable_name, type=variable_type, initializer=initializer)
+        return ast.VariableDeclaration(location=location, variable_name=variable_name, initializer=initializer)
 
     def parse_expressions() -> ast.Expression | None:
         ends_with_semicolon = False
@@ -309,7 +326,11 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
     return parse_expressions()
 
 
-def _validate_that_expression_ends_with_semicolumn_if_needed(tokens: list[Token], new_position: int, latest_expression: ast.Expression):
+def _validate_that_expression_ends_with_semicolumn_if_needed(
+        tokens: list[Token],
+    new_position: int,
+    latest_expression: ast.Expression
+) -> None:
     if len(tokens) > new_position and not tokens[new_position].text == ';':
         if not isinstance(latest_expression, ast.BlockExpression):
             raise Exception(f"""
@@ -321,5 +342,7 @@ def _should_append_unit_in_the_end(expressions: list[ast.Expression], ends_with_
     if not isinstance(expressions[-1], ast.BlockExpression):
         if ends_with_semicolon:
             return True
+        else:
+            return False
     else:
         return False

@@ -66,11 +66,11 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
             operator = node.operator
             token_type = get_type(node.operand, symTab)
             if operator.token == '-':
-                if token_type.name != 'Int':
+                if token_type != Int:
                     raise Exception(
                         "Expected an integer with '-' operator")
             elif operator.token == 'not':
-                if token_type.name != 'Bool':
+                if token_type != Bool:
                     raise Exception("Expected a boolean with 'not' operator")
             return token_type
 
@@ -81,44 +81,44 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
                     f"Variable '{node.variable_name}' already exists"
                 )
 
-            expected_type = node.type
+            expected_type_of_variable = node.type
 
             type = get_type(node.initializer, symTab)
-            if expected_type is not None:
-                if type != expected_type:
+            if expected_type_of_variable is not None and expected_type_of_variable is not Unit:
+                if type != expected_type_of_variable:
                     raise Exception(
                         f"""
-                    Expected the variable to be of type {expected_type.name} but found {type.name}
+                    Expected the variable to be of type {expected_type_of_variable} but found {type}
                                     """
                     )
             symTab.locals[variable_name] = type
             return Unit
 
         case ast.Assignment():
-            variable_name = node.variable_name
-            if not isinstance(variable_name, ast.Identifier):
+            variable = node.variable_name
+            if not isinstance(variable, ast.Identifier):
                 raise Exception(
                     f"""
                     Variable name should be a proper identifier, got
-                    '{variable_name.name}'.
+                    '{variable.name}'.
                         """
                 )
             try:
                 old_type, sym_tab_where_variable_was_found = find_type(
-                    variable_name.name, symTab)
+                    variable.name, symTab)
             except:
                 raise Exception(
-                    f"Variable '{variable_name.name}' has not been declared")
+                    f"Variable '{variable.name}' has not been declared")
 
             new_type = get_type(node.initializer, symTab)
             if new_type != old_type:
                 raise Exception(
                     f"""
-                    Variable '{variable_name.name}' should be of the type '{old_type.name}'
+                    Variable '{variable.name}' should be of the type '{old_type.name}'
                     """
                 )
 
-            sym_tab_where_variable_was_found.locals[variable_name.name] = new_type
+            sym_tab_where_variable_was_found.locals[variable.name] = new_type
             return new_type
 
         case ast.IfExpression():
@@ -167,7 +167,7 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
 
         case ast.WhileLoop():
             condition_type = get_type(node.while_condition, symTab)
-            if condition_type.name != 'Bool':
+            if condition_type != Bool:
                 raise Exception(f"While loop condition should be of boolean type, got '{condition_type}'"
                                 )
             else:

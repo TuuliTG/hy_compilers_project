@@ -203,7 +203,6 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
     # Start visiting the AST from the root.
     var_final_result = visit(root_node, root_symtab)
 
-    print(f"final irvar {var_final_result}")
     if var_types[var_final_result] == Int:
         instructions.append(
             ir.Call(L, IRVar("print_int"), [var_final_result], new_var(Unit))

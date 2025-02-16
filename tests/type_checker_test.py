@@ -11,7 +11,7 @@ def test_type_checker_basic() -> None:
     assert _tokenize_parse_type_check("1*2") == Int
     assert _tokenize_parse_type_check("1<2") == Bool
     _assert_raises_exception(
-        "true < 2", "Operator < expects two BasicType(name='Int')"
+        "true < 2", "Operator < expects two Int"
     )
 
 
@@ -31,7 +31,7 @@ def test_and_or() -> None:
     assert _tokenize_parse_type_check("1<2 or 1>3") == Bool
     assert _tokenize_parse_type_check("1<2 and 1>3") == Bool
     _assert_raises_exception(
-        "1 or 1>3", "Operator or expects two BasicType(name='Bool')")
+        "1 or 1>3", "Operator or expects two Bool")
 
 
 def test_return_unit() -> None:
@@ -85,7 +85,7 @@ def test_assignment() -> None:
 def test_while_loop() -> None:
     assert _tokenize_parse_type_check("while true do 1+2") == Unit
     _assert_raises_exception(
-        "while 1 do 2+2", "While loop condition should be of boolean type, got 'BasicType(name='Int')'"
+        "while 1 do 2+2", "While loop condition should be of boolean type, got 'Int'"
     )
 
 
