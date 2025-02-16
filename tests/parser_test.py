@@ -1140,3 +1140,70 @@ def test_parse_while_loop() -> None:
                       ))
         ]
     )
+
+
+def test_unary_op_nested() -> None:
+    tokens = tokenize("var x = 1; if -x > 2 then 3")
+    ast = parse(tokens)
+    assert ast == BlockExpression(
+        location=L,
+        expressions=[
+            VariableDeclaration(
+                location=L, type=None,
+                variable_name='x',
+                initializer=Literal(location=L, value=1)),
+            IfExpression(
+                location=L,
+                condition_branch=BinaryOp(
+                    location=L,
+                    left=UnaryExpression(
+                        location=L,
+                        operator=Operator(
+                            location=L, token='-'),
+                        operand=Identifier(
+                            location=L, name='x')),
+                    op=Operator(
+                        location=L, token='>'),
+                    right=Literal(location=L, value=2)),
+                then_branch=Literal(
+                    location=L, value=3),
+                else_branch=None)
+        ]
+    )
+
+
+def test_unary_op_nested_2() -> None:
+    tokens = tokenize("var x = 1; if -(1+2*3) > 2 then 3")
+    ast = parse(tokens)
+    assert ast == BlockExpression(
+        location=L,
+        expressions=[
+            VariableDeclaration(
+                location=L, type=None,
+                variable_name='x',
+                initializer=Literal(location=L, value=1)),
+            IfExpression(
+                location=L,
+                condition_branch=BinaryOp(
+                    location=L,
+                    left=UnaryExpression(
+                        location=L,
+                        operator=Operator(
+                            location=L, token='-'),
+                        operand=BinaryOp(
+                            location=L,
+                            left=Literal(location=L, value=1),
+                            op=Operator(location=L, token='+'),
+                            right=BinaryOp(
+                                location=L,
+                                left=Literal(L, 2),
+                                op=Operator(location=L, token='*'),
+                                right=Literal(L, 3)))),
+                    op=Operator(
+                        location=L, token='>'),
+                    right=Literal(location=L, value=2)),
+                then_branch=Literal(
+                    location=L, value=3),
+                else_branch=None)
+        ]
+    )

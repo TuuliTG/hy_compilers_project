@@ -30,6 +30,11 @@ def test_if_with_else() -> None:
     assert True
 
 
+def test_assignment() -> None:
+    irs = _generate_ir("var x = 1; {var y=1; x}")
+    assert True
+
+
 def _generate_ir(code: str) -> list[ir.Instruction]:
     nodes = parse(tokenize(code))
     get_type(nodes, symTab=SymTab(locals=dict(), parent=None))

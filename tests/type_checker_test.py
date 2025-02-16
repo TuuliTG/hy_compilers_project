@@ -45,7 +45,12 @@ def test_unary_op() -> None:
     assert _tokenize_parse_type_check("not true") == Bool
     assert _tokenize_parse_type_check("not (1>2)") == Bool
     assert _tokenize_parse_type_check("-(1+2)") == Int
+    assert _tokenize_parse_type_check("var x = 1; - x") == Int
     _assert_raises_exception("not 1", "Expected a boolean with 'not' operator")
+
+
+def test_unary_op_nested() -> None:
+    assert _tokenize_parse_type_check("var x = 1; if -x > 2 then 3") == Unit
 
 
 def test_function() -> None:

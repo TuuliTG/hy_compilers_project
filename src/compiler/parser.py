@@ -192,7 +192,10 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression:
             operator_token = consume()
             operator = ast.Operator(
                 location=operator_token.loc, token=operator_token.text)
-            operand = parse_binary_operator_level(0)
+            if operator_token.text == '-':
+                operand = parse_factor()
+            else:
+                operand = parse_binary_operator_level(0)
             return ast.UnaryExpression(location=operator_token.loc, operator=operator, operand=operand)
         else:
             return parse_binary_operator_level(level=level+1)
