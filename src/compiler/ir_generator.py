@@ -30,10 +30,13 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
         next_var_number += 1
         return var
 
-    def new_label() -> Label:
+    def new_label(name: str = None) -> Label:
         nonlocal next_label_number
-        label = Label(L, f'L{next_label_number}')
-        next_label_number += 1
+        if name is None:
+            label = Label(L, f'L{next_label_number}')
+            next_label_number += 1
+        else:
+            label = Label(L, name)
         return label
 
     def generate_if_expression_without_else_branch(node: ast.Expression, symTab) -> IRVar:
@@ -142,7 +145,20 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
                 )
                 return dest_var
             case ast.WhileLoop():
-                pass
+                l_start = new_label("while_start")
+                l_body = new_label("while_body")
+                l_end = new_label("while_end")
+
+                instructions.append(l_start)
+                var_cond = visit(node.while_condition, symTab)
+                instructions.append(ir.CondJump(
+                    node.location, var_cond, l_body, l_end))
+                instructions.append(l_body)
+                visit(node.do_expression, symTab)
+                instructions.append(
+                    ir.Jump(node.do_expression.location, l_start)
+                )
+                instructions.append(l_end)
 
             case ast.IfExpression():
                 if node.else_branch is None:
