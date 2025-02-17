@@ -1,12 +1,13 @@
 from base64 import b64encode
 import json
+import os
 import re
 import sys
 from socketserver import ForkingTCPServer, StreamRequestHandler
 from traceback import format_exception
 from typing import Any
-from assembly_generator import generate_assembly
-from compiler.assembler import assemble
+from compiler.assembly_generator import generate_assembly
+from compiler.assembler import assemble, assemble_and_get_executable
 from compiler.interpreter import SymTab
 
 from compiler.ir_generator import generate_ir
@@ -16,11 +17,25 @@ from compiler.type_checker import get_type
 
 
 def call_compiler(source_code: str, input_file_name: str) -> bytes:
-    # *** TODO ***
-    # Call your compiler here and return the compiled executable.
-    # Raise an exception on compilation error.
-    # *** TODO ***
-    raise NotImplementedError("Compiler not implemented")
+    # Tokenize source code
+    tokens = tokenize(source_code)
+
+    # Parse tokens into an AST
+    ast_nodes = parse(tokens)
+    if ast_nodes is None:
+        raise Exception("Parsing failed")
+
+    # Perform type checking
+    get_type(ast_nodes, symTab=SymTab(locals=dict(), parent=None))
+
+    # Generate Intermediate Representation (IR)
+    ir_code = generate_ir(ast_nodes)
+
+    # Generate assembly code from IR
+    asm_code = generate_assembly(ir_code)
+
+    # Assemble to binary and return the executable
+    return assemble_and_get_executable(asm_code)
 
 
 def main() -> int:

@@ -50,6 +50,23 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression | None:
         else:
             raise IndexError("Array of tokens was empty")
 
+    def look_back() -> Token:
+        if tokens and pos > 0:
+            return tokens[pos-1]
+        else:
+            raise IndexError(f"Cannot look back to pos {pos - 1}")
+
+    def _validate_that_expression_ends_with_semicolumn_if_needed(
+        tokens: list[Token],
+        new_position: int,
+        latest_expression: ast.Expression
+    ) -> None:
+        if len(tokens) > new_position and not tokens[new_position].text == ';' and not look_back().text == '}':
+            raise Exception(f"""
+            {tokens[new_position-1].loc}: Expected \';\', but found '{tokens[new_position-1].text}'
+            """
+            )
+
     def consume(expected: str | list[str] | None = None) -> Token:
         nonlocal pos
         token = peek()
@@ -123,7 +140,10 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression | None:
         token = consume('while')
         while_condition = parse_binary_operator_level(0)
         consume('do')
-        do_expression = parse_binary_operator_level(0)
+        if peek().text == '{':
+            do_expression = parse_block()
+        else:
+            do_expression = parse_binary_operator_level(0)
         return ast.WhileLoop(location=token.loc, while_condition=while_condition, do_expression=do_expression)
 
     def parse_block() -> ast.Expression:
@@ -180,6 +200,9 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression | None:
     def parse_function_call(function_name: str, location: SourceLocation) -> ast.Expression:
         consume('(')
         args: list[ast.Expression] = []
+        if peek().text == ')':
+            consume(')')
+            return ast.FunctionExpression(location=location, function_name=function_name, args=args)
         while True:
             args.append(parse_binary_operator_level(0))
             token = consume([',', ')'])
@@ -324,18 +347,6 @@ def parse(tokens: list[Token], pos: int = 0) -> ast.Expression | None:
         return ast.BlockExpression(location=expressions[0].location, expressions=expressions)
 
     return parse_expressions()
-
-
-def _validate_that_expression_ends_with_semicolumn_if_needed(
-        tokens: list[Token],
-    new_position: int,
-    latest_expression: ast.Expression
-) -> None:
-    if len(tokens) > new_position and not tokens[new_position].text == ';':
-        if not isinstance(latest_expression, ast.BlockExpression):
-            raise Exception(f"""
-              {tokens[new_position-1].loc}: Expected \';\', but found '{tokens[new_position-1].text}' """
-            )
 
 
 def _should_append_unit_in_the_end(expressions: list[ast.Expression], ends_with_semicolon: bool) -> bool:

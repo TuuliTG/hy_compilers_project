@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional
 from compiler import ast
 
-type Value = int | bool | None | Callable[[
-    Value, Value], Value] | Callable[[Value], Value]
+type Value = int | bool | None | Callable
 
 
 @dataclass
@@ -127,13 +126,12 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
                 else:
                     return False
             else:
-
                 operator_function = find_variable(node.op.token, root_table)
 
                 if not callable(operator_function):
                     raise Exception(
-                        f"Operator {node.op.token} is not a function")
-
+                        f"Operator {node.op.token} is not a function"
+                    )
                 return operator_function(a, b)
 
         case ast.UnaryExpression():
@@ -193,8 +191,10 @@ def interpret(node: ast.Expression, symTab: SymTab) -> Value:
             if not callable(function):
                 raise Exception(
                     f"Function {node.function_name} is not a function")
-            args = [interpret(arg, symTab) for arg in function_args]
-            return function(*args)
+            else:
+                args = [interpret(arg, symTab) for arg in function_args]
+                return function(*args)
 
         case _:
             raise Exception(f"Unsupported AST node {node}")
+    return None

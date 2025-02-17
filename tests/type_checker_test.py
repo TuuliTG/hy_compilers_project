@@ -55,7 +55,7 @@ def test_unary_op_nested() -> None:
 
 def test_function() -> None:
     assert _tokenize_parse_type_check(
-        "print_int(1)") == FunType(name='funtype', args=[Int], return_type=Unit)
+        "print_int(1)") == Unit
 
 
 def test_variable_declaration() -> None:
@@ -101,6 +101,28 @@ def test_if_condition_without_else_branch_returns_unit_type() -> None:
 def test_if_clause_fails_if_types_are_different() -> None:
     _assert_raises_exception("if 1<2 then 1 else true",
                              "Then branch and else branch should have the same return type")
+
+
+def test_wrong_type_in_function_params() -> None:
+    _assert_raises_exception("print_int(true)", "")
+    _assert_raises_exception("print_bool(1+2*3)", "")
+
+
+def test_bigger_program() -> None:
+    _tokenize_parse_type_check("""
+        var n = read_int();
+        print_int(n);
+        while n > 1 do {
+            if n % 2 == 0 then {
+                n = n / 2;
+            } else {
+                n = 3 * n + 1;
+            }
+            print_int(n);
+        }
+    """)
+
+    assert True
 
 
 def _tokenize_parse_type_check(code: str) -> Type:

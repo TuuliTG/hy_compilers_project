@@ -1207,3 +1207,40 @@ def test_unary_op_nested_2() -> None:
                 else_branch=None)
         ]
     )
+
+
+def test_while_block() -> None:
+    tokens = tokenize(
+        "var i = 1;var s = 0;while i <= 5 do {s = s + i;i = i + 1;}s"
+    )
+    ast = parse(tokens)
+    assert True
+
+
+def test_bigger_program() -> None:
+    tokens = tokenize("""
+        var n = read_int();
+        print_int(n);
+        while n > 1 do {
+            if n % 2 == 0 then {
+                n = n / 2;
+            } else {
+                n = 3 * n + 1;
+            }
+            print_int(n);
+        }
+    """)
+    ast = parse(tokens)
+    assert True
+
+
+def test_print_as_var() -> None:
+    tokens = tokenize("var n = read_int();")
+    ast = parse(tokens)
+    assert True
+
+
+# def test_infinite_loop() -> None:
+#    tokens = tokenize("struct bla { x: Int =1, y: Int =2 }")
+#    ast = parse(tokens)
+#    assert True

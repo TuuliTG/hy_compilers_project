@@ -12,6 +12,8 @@ def generate_assembly(instructions: list[ir.Instruction]) -> str:
     emit('.global main')
     emit('.type main, @function')
     emit('.extern print_int')
+    emit('.extern print_bool')
+    emit('.extern read_int')
 
     emit('.section .text')
     emit('main:')
@@ -41,16 +43,30 @@ def generate_assembly(instructions: list[ir.Instruction]) -> str:
                     intrinsic(args)
                     emit(f'movq %rax, {locals.get_ref(insn.dest)}')
                 else:
-                    assert insn.fun.name == 'print_int'
-                    assert len(insn.args) == 1
-                    emit(f'movq {locals.get_ref(insn.args[0])}, %rdi')
-                    emit('call print_int')
+                    if insn.fun.name == 'print_bool':
+                        assert len(insn.args) == 1
+                        emit(f'movq {locals.get_ref(insn.args[0])}, %rdi')
+                        emit('call print_bool')
+                    elif insn.fun.name == 'print_int':
+                        assert len(insn.args) == 1
+                        emit(f'movq {locals.get_ref(insn.args[0])}, %rdi')
+                        emit('call print_int')
+                    elif insn.fun.name == 'read_int':
+                        emit('call read_int')
+                        emit(f'movq %rax, {locals.get_ref(insn.dest)}')
+
             case ir.Jump():
                 emit(f'jmp .L{insn.label.name}')
             case ir.CondJump():
                 emit(f'cmpq $0, {locals.get_ref(insn.cond)}')
                 emit(f'jne .L{insn.then_label.name}')
                 emit(f'jmp .L{insn.else_label.name}')
+            case ir.LoadBoolConst():
+                if insn.value == True:
+                    value = 1
+                elif insn.value == False:
+                    value = 0
+                emit(f'movq ${value}, {locals.get_ref(insn.dest)}')
             case _:
                 raise Exception(f"Unknown instruction type {type(insn)}")
 

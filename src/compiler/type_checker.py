@@ -20,7 +20,7 @@ root_table.locals.update({
     'and': FunType(name='funtype', args=[Bool, Bool], return_type=Bool),
     'print_int': FunType(name='funtype', args=[Int], return_type=Unit),
     'print_bool': FunType(name='funtype', args=[Bool], return_type=Unit),
-    'read_int': FunType(name='funtype', args=[Int], return_type=Unit),
+    'read_int': FunType(name='funtype', args=[], return_type=Int),
 })
 
 
@@ -163,7 +163,20 @@ def typecheck(node: ast.Expression, symTab: SymTab) -> Type:
 
         case ast.FunctionExpression():
             type, _ = find_type(node.function_name, symTab)
-            return type
+
+            if isinstance(type, FunType):
+                arg_types = type.args
+                for expected_type in arg_types:
+                    for arg in node.args:
+                        node_arg_type = get_type(arg, symTab)
+                        if node_arg_type != expected_type:
+                            raise Exception(
+                                f"""Expected type
+                            {expected_type} in function params but found {node_arg_type}"""
+                            )
+                return type.return_type
+            else:
+                raise Exception("Should be function type")
 
         case ast.WhileLoop():
             condition_type = get_type(node.while_condition, symTab)

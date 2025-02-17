@@ -8,7 +8,8 @@ from compiler.types import Bool, Int, Type, Unit
 def get_root_types() -> dict[IRVar, Type]:
     root_types = {
         IRVar('print_int'): Unit,
-        IRVar('print_bool'): Unit
+        IRVar('print_bool'): Unit,
+        IRVar('read_int'): Int,
     }
     return root_types
 
@@ -36,7 +37,8 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
             label = Label(L, f'L{next_label_number}')
             next_label_number += 1
         else:
-            label = Label(L, name)
+            label = Label(L, f'{name}{next_label_number}')
+            next_label_number += 1
         return label
 
     def generate_if_expression_without_else_branch(node: ast.IfExpression, symTab: SymTab) -> IRVar:
@@ -85,15 +87,55 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
                 return var
             case ast.BinaryOp():
                 var_left = visit(node.left, symTab)
-                var_right = visit(node.right, symTab)
-                var_result = new_var(node.type)
-                instructions.append(ir.Call(
-                    location=node.location,
-                    fun=IRVar(node.op.token),
-                    args=[var_left, var_right],
-                    dest=var_result
-                ))
-                return var_result
+
+                if node.op.token == 'and':
+                    l_and_right = new_label("and_right")
+                    l_and_skip = new_label("and_skip")
+                    l_and_end = new_label("and_end")
+                    instructions.append(ir.CondJump(
+                        node.location, var_left, l_and_right, l_and_skip))
+
+                    instructions.append(l_and_right)
+                    var_right = visit(node.right, symTab)
+                    copy_var = new_var(node.right.type)
+                    instructions.append(ir.Copy(L, var_right, copy_var))
+                    instructions.append(ir.Jump(L, l_and_end))
+
+                    instructions.append(l_and_skip)
+                    instructions.append(ir.LoadBoolConst(
+                        node.location, False, copy_var))
+                    instructions.append(ir.Jump(L, l_and_end))
+                    instructions.append(l_and_end)
+                    return copy_var
+
+                elif node.op.token == 'or':
+                    l_or_right = new_label('or_right')
+                    l_or_skip = new_label('or_skip')
+                    l_or_end = new_label('or_end')
+                    instructions.append(ir.CondJump(
+                        node.location, var_left, l_or_skip, l_or_right
+                    ))
+                    instructions.append(l_or_right)
+                    var_right = visit(node.right, symTab)
+                    copy_var = new_var(node.right.type)
+                    instructions.append(ir.Copy(L, var_right, copy_var))
+                    instructions.append(ir.Jump(L, l_or_end))
+
+                    instructions.append(l_or_skip)
+                    instructions.append(ir.LoadBoolConst(L, True, copy_var))
+                    instructions.append(ir.Jump(L, l_or_end))
+                    instructions.append(l_or_end)
+                    return copy_var
+                else:
+                    var_right = visit(node.right, symTab)
+                    var_result = new_var(node.type)
+                    instructions.append(ir.Call(
+                        location=node.location,
+                        fun=IRVar(node.op.token),
+                        args=[var_left, var_right],
+                        dest=var_result
+                    ))
+                    return var_result
 
             case ast.UnaryExpression():
                 var_operand = visit(node.operand, symTab)
@@ -120,7 +162,7 @@ def generate_ir(root_node: ast.Expression) -> list[ir.Instruction]:
                 root_types[variable_var] = node.initializer.type
                 instructions.append(
                     ir.Copy(node.location, source=value_var, dest=variable_var))
-                return value_var
+                return var_unit
 
             case ast.Assignment():
                 variable_name = node.variable_name.name
